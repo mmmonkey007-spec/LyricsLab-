@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/"
+title = "LyricLab"
+version = "1.0.0"
+id = "artifacts/lyriclab"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/" ]
+localPort = 18239
+
+[services.development]
+run = "pnpm --filter @workspace/lyriclab run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/lyriclab", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/lyriclab", "run", "serve" ]
+
+[services.env]
+PORT = "18239"
+BASE_PATH = "/"
