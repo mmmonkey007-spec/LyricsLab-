@@ -1,0 +1,302 @@
+Unmapped texture diagnostic report
+
+Purpose: measure conservative connected regions of near-uniform base-color albedo that are actually referenced by mesh UVs.
+This is a read-only diagnostic. Source GLBs and texture files were not rewritten, repaired, repainted, filled, re-UVed, or exported.
+Analysis grid: 512x512 texels per atlas.
+Used-atlas sampling: triangle UV vertices, three edge midpoints, and triangle centroids.
+Flat-neighbor tolerance: maximum linear RGB neighbor delta <= 0.018.
+Connected-region acceptance: 4-connected, at least 48 analysis texels (or 0.025% of used area), max channel standard deviation <= 0.014.
+Absolute source-equivalent areas scale each analysis texel by native atlas area / analysis-grid area.
+
+BUZZ
+  Scenario source asset: asset_BsNceokZCmvnTr9m76CWHBDB
+  Fresh diagnostic source file: unmapped-buzz-fresh-probe.glb
+  Source path: /home/runner/workspace/tools/character-renderer/models/unmapped-buzz-fresh-probe.glb
+  Source SHA-256 before/after: 4ca0a3d374cc0840ddbaac4e71511755435e27de334f957ff99621499172f5e4 (unchanged)
+  Mesh: mesh_node
+    Base-color atlas: base_color (4096x4096)
+    Used texture area: 205947 analysis texels; 13180608 source-equivalent texels
+    Absolute significant flat-fill area: 54376 analysis texels; 3480064 source-equivalent texels
+    Flat-fill percentage of used area: 26.403%
+    Connected significant-region count: 186
+    Largest region sizes: 2681 analysis / 171584 source-equivalent, 1525 analysis / 97600 source-equivalent, 1107 analysis / 70848 source-equivalent, 926 analysis / 59264 source-equivalent, 893 analysis / 57152 source-equivalent, 892 analysis / 57088 source-equivalent, 883 analysis / 56512 source-equivalent, 880 analysis / 56320 source-equivalent
+    Region 1: 2681 analysis texels; 171584 source-equivalent; mean RGB=(0.5863,0.0012,0.5826); stddev=0.01345; contributing triangles=21496; ordinary-language location=back character-right hips and lower torso
+    Region 2: 1525 analysis texels; 97600 source-equivalent; mean RGB=(0.5837,0.0013,0.5845); stddev=0.00529; contributing triangles=19519; ordinary-language location=back character-left hips and lower torso
+    Region 3: 1107 analysis texels; 70848 source-equivalent; mean RGB=(0.9930,0.9270,0.7530); stddev=0.00871; contributing triangles=9319; ordinary-language location=back center hips and lower torso
+    Region 4: 926 analysis texels; 59264 source-equivalent; mean RGB=(0.9028,0.7829,0.5965); stddev=0.00662; contributing triangles=1533; ordinary-language location=front character-left feet and ankles
+    Region 5: 893 analysis texels; 57152 source-equivalent; mean RGB=(0.9023,0.7817,0.5950); stddev=0.00729; contributing triangles=1306; ordinary-language location=front character-right feet and ankles
+    Region 6: 892 analysis texels; 57088 source-equivalent; mean RGB=(0.5832,0.0008,0.5798); stddev=0.00627; contributing triangles=7694; ordinary-language location=back character-left hips and lower torso
+    Region 7: 883 analysis texels; 56512 source-equivalent; mean RGB=(0.4151,0.2907,0.1334); stddev=0.01196; contributing triangles=8669; ordinary-language location=side/center character-right lower body and legs
+    Region 8: 880 analysis texels; 56320 source-equivalent; mean RGB=(0.9932,0.9230,0.7498); stddev=0.00611; contributing triangles=7789; ordinary-language location=back center hips and lower torso
+    Region 9: 871 analysis texels; 55744 source-equivalent; mean RGB=(0.9933,0.9240,0.7514); stddev=0.00793; contributing triangles=5783; ordinary-language location=back center hips and lower torso
+    Region 10: 870 analysis texels; 55680 source-equivalent; mean RGB=(0.9940,0.9246,0.7513); stddev=0.00713; contributing triangles=6845; ordinary-language location=back center hips and lower torso
+    Region 11: 843 analysis texels; 53952 source-equivalent; mean RGB=(0.5800,0.0009,0.5813); stddev=0.00636; contributing triangles=12525; ordinary-language location=back character-left upper torso and arms
+    Region 12: 776 analysis texels; 49664 source-equivalent; mean RGB=(0.4188,0.2940,0.1355); stddev=0.01385; contributing triangles=4889; ordinary-language location=side/center character-right lower body and legs
+    Region 13: 764 analysis texels; 48896 source-equivalent; mean RGB=(0.9933,0.9246,0.7514); stddev=0.00548; contributing triangles=5899; ordinary-language location=back center hips and lower torso
+    Region 14: 759 analysis texels; 48576 source-equivalent; mean RGB=(0.5846,0.0013,0.5860); stddev=0.00881; contributing triangles=11151; ordinary-language location=back center upper torso and arms
+    Region 15: 747 analysis texels; 47808 source-equivalent; mean RGB=(0.5811,0.0011,0.5805); stddev=0.00765; contributing triangles=8703; ordinary-language location=back character-right upper torso and arms
+    Region 16: 746 analysis texels; 47744 source-equivalent; mean RGB=(0.8622,0.5658,0.3758); stddev=0.01162; contributing triangles=5922; ordinary-language location=side/center character-right hips and lower torso
+    Region 17: 725 analysis texels; 46400 source-equivalent; mean RGB=(0.6353,0.0014,0.5811); stddev=0.00763; contributing triangles=4268; ordinary-language location=front center hips and lower torso
+    Region 18: 708 analysis texels; 45312 source-equivalent; mean RGB=(0.5818,0.0016,0.5859); stddev=0.00410; contributing triangles=5082; ordinary-language location=back character-left hips and lower torso
+    Region 19: 704 analysis texels; 45056 source-equivalent; mean RGB=(0.9935,0.9253,0.7522); stddev=0.00632; contributing triangles=4330; ordinary-language location=back center hips and lower torso
+    Region 20: 690 analysis texels; 44160 source-equivalent; mean RGB=(0.4097,0.2887,0.1315); stddev=0.01314; contributing triangles=6992; ordinary-language location=side/center character-left lower body and legs
+    Region 21: 686 analysis texels; 43904 source-equivalent; mean RGB=(0.9910,0.9149,0.7432); stddev=0.01312; contributing triangles=6148; ordinary-language location=front character-left upper torso and arms
+    Region 22: 676 analysis texels; 43264 source-equivalent; mean RGB=(0.5834,0.0016,0.5861); stddev=0.00499; contributing triangles=8372; ordinary-language location=back character-right hips and lower torso
+    Region 23: 672 analysis texels; 43008 source-equivalent; mean RGB=(0.9932,0.9310,0.7637); stddev=0.00743; contributing triangles=4733; ordinary-language location=front character-left feet and ankles
+    Region 24: 658 analysis texels; 42112 source-equivalent; mean RGB=(0.6378,0.0011,0.5824); stddev=0.00677; contributing triangles=3476; ordinary-language location=front center hips and lower torso
+    Region 25: 643 analysis texels; 41152 source-equivalent; mean RGB=(0.5850,0.0012,0.5865); stddev=0.00487; contributing triangles=7085; ordinary-language location=back character-right hips and lower torso
+    Region 26: 638 analysis texels; 40832 source-equivalent; mean RGB=(0.4158,0.2916,0.1332); stddev=0.01113; contributing triangles=3202; ordinary-language location=back character-left lower body and legs
+    Region 27: 638 analysis texels; 40832 source-equivalent; mean RGB=(0.9920,0.9236,0.7469); stddev=0.00736; contributing triangles=7918; ordinary-language location=back character-left hips and lower torso
+    Region 28: 631 analysis texels; 40384 source-equivalent; mean RGB=(0.9795,0.8938,0.7215); stddev=0.00804; contributing triangles=1750; ordinary-language location=front character-left feet and ankles
+    Region 29: 630 analysis texels; 40320 source-equivalent; mean RGB=(0.9933,0.9214,0.7442); stddev=0.00953; contributing triangles=8581; ordinary-language location=back character-right hips and lower torso
+    Region 30: 608 analysis texels; 38912 source-equivalent; mean RGB=(0.4186,0.2924,0.1336); stddev=0.00912; contributing triangles=3542; ordinary-language location=back character-right lower body and legs
+    Region 31: 581 analysis texels; 37184 source-equivalent; mean RGB=(0.9875,0.9134,0.7379); stddev=0.01349; contributing triangles=10168; ordinary-language location=front character-left hips and lower torso
+    Region 32: 550 analysis texels; 35200 source-equivalent; mean RGB=(0.6254,0.0005,0.5735); stddev=0.01071; contributing triangles=8213; ordinary-language location=side/center character-left hips and lower torso
+    Region 33: 542 analysis texels; 34688 source-equivalent; mean RGB=(0.8634,0.5622,0.3673); stddev=0.01148; contributing triangles=4473; ordinary-language location=side/center character-right lower body and legs
+    Region 34: 529 analysis texels; 33856 source-equivalent; mean RGB=(0.9916,0.9166,0.7444); stddev=0.01363; contributing triangles=5716; ordinary-language location=front character-left hips and lower torso
+    Region 35: 501 analysis texels; 32064 source-equivalent; mean RGB=(0.9807,0.8953,0.7242); stddev=0.00712; contributing triangles=1465; ordinary-language location=front character-right feet and ankles
+    Region 36: 499 analysis texels; 31936 source-equivalent; mean RGB=(0.5846,0.0012,0.5891); stddev=0.00638; contributing triangles=11636; ordinary-language location=back center upper torso and arms
+    Region 37: 496 analysis texels; 31744 source-equivalent; mean RGB=(0.9939,0.9330,0.7644); stddev=0.00606; contributing triangles=3285; ordinary-language location=front character-right feet and ankles
+    Region 38: 484 analysis texels; 30976 source-equivalent; mean RGB=(0.8479,0.5356,0.3150); stddev=0.01170; contributing triangles=2777; ordinary-language location=side/center center upper torso and arms
+    Region 39: 433 analysis texels; 27712 source-equivalent; mean RGB=(0.3810,0.2629,0.1094); stddev=0.01169; contributing triangles=1819; ordinary-language location=side/center center lower body and legs
+    Region 40: 420 analysis texels; 26880 source-equivalent; mean RGB=(0.9903,0.9191,0.7433); stddev=0.01176; contributing triangles=2639; ordinary-language location=back character-left feet and ankles
+    Region 41: 411 analysis texels; 26304 source-equivalent; mean RGB=(0.6217,0.0003,0.5720); stddev=0.01035; contributing triangles=5180; ordinary-language location=side/center character-left hips and lower torso
+    Region 42: 406 analysis texels; 25984 source-equivalent; mean RGB=(0.4454,0.3150,0.1412); stddev=0.01272; contributing triangles=3718; ordinary-language location=front center lower body and legs
+    Region 43: 395 analysis texels; 25280 source-equivalent; mean RGB=(0.8984,0.5616,0.3672); stddev=0.01208; contributing triangles=2394; ordinary-language location=front character-left lower body and legs
+    Region 44: 389 analysis texels; 24896 source-equivalent; mean RGB=(0.6311,0.0008,0.5777); stddev=0.00824; contributing triangles=4162; ordinary-language location=front center hips and lower torso
+    Region 45: 375 analysis texels; 24000 source-equivalent; mean RGB=(0.9019,0.7823,0.5961); stddev=0.00587; contributing triangles=752; ordinary-language location=side/center character-left feet and ankles
+    Region 46: 368 analysis texels; 23552 source-equivalent; mean RGB=(0.5838,0.0009,0.5889); stddev=0.00646; contributing triangles=9331; ordinary-language location=back center upper torso and arms
+    Region 47: 353 analysis texels; 22592 source-equivalent; mean RGB=(0.9007,0.7815,0.5949); stddev=0.00567; contributing triangles=638; ordinary-language location=side/center character-right feet and ankles
+    Region 48: 353 analysis texels; 22592 source-equivalent; mean RGB=(0.5759,0.0007,0.5877); stddev=0.00842; contributing triangles=8376; ordinary-language location=side/center character-left hips and lower torso
+    Region 49: 346 analysis texels; 22144 source-equivalent; mean RGB=(0.4261,0.3001,0.1402); stddev=0.00284; contributing triangles=1202; ordinary-language location=back character-left lower body and legs
+    Region 50: 343 analysis texels; 21952 source-equivalent; mean RGB=(0.9895,0.9153,0.7322); stddev=0.00865; contributing triangles=5999; ordinary-language location=side/center character-left hips and lower torso
+    Region 51: 342 analysis texels; 21888 source-equivalent; mean RGB=(0.4385,0.3079,0.1352); stddev=0.01144; contributing triangles=1383; ordinary-language location=front character-left lower body and legs
+    Region 52: 340 analysis texels; 21760 source-equivalent; mean RGB=(0.6286,0.0009,0.5764); stddev=0.00916; contributing triangles=3644; ordinary-language location=front center hips and lower torso
+    Region 53: 337 analysis texels; 21568 source-equivalent; mean RGB=(0.9895,0.9276,0.7479); stddev=0.00801; contributing triangles=2531; ordinary-language location=back center hips and lower torso
+    Region 54: 324 analysis texels; 20736 source-equivalent; mean RGB=(0.9876,0.9131,0.7432); stddev=0.01185; contributing triangles=3071; ordinary-language location=front center upper torso and arms
+    Region 55: 314 analysis texels; 20096 source-equivalent; mean RGB=(0.5866,0.0007,0.5530); stddev=0.01151; contributing triangles=2891; ordinary-language location=back center upper torso and arms
+    Region 56: 309 analysis texels; 19776 source-equivalent; mean RGB=(0.9930,0.9200,0.7432); stddev=0.01252; contributing triangles=4658; ordinary-language location=back character-left upper torso and arms
+    Region 57: 308 analysis texels; 19712 source-equivalent; mean RGB=(0.4199,0.2948,0.1356); stddev=0.00776; contributing triangles=2819; ordinary-language location=back center lower body and legs
+    Region 58: 304 analysis texels; 19456 source-equivalent; mean RGB=(0.9934,0.9233,0.7479); stddev=0.00976; contributing triangles=2701; ordinary-language location=back center hips and lower torso
+    Region 59: 303 analysis texels; 19392 source-equivalent; mean RGB=(0.6276,0.0021,0.5750); stddev=0.01307; contributing triangles=1123; ordinary-language location=front center upper torso and arms
+    Region 60: 297 analysis texels; 19008 source-equivalent; mean RGB=(0.8851,0.5717,0.3752); stddev=0.00818; contributing triangles=1855; ordinary-language location=front character-right hips and lower torso
+    Region 61: 296 analysis texels; 18944 source-equivalent; mean RGB=(0.9911,0.9170,0.7430); stddev=0.00899; contributing triangles=4385; ordinary-language location=front character-right hips and lower torso
+    Region 62: 283 analysis texels; 18112 source-equivalent; mean RGB=(0.9927,0.9159,0.7413); stddev=0.01116; contributing triangles=3120; ordinary-language location=back character-right upper torso and arms
+    Region 63: 281 analysis texels; 17984 source-equivalent; mean RGB=(0.6331,0.0008,0.5783); stddev=0.01009; contributing triangles=2943; ordinary-language location=side/center character-right upper torso and arms
+    Region 64: 280 analysis texels; 17920 source-equivalent; mean RGB=(0.6316,0.0012,0.5793); stddev=0.00911; contributing triangles=3255; ordinary-language location=side/center character-left upper torso and arms
+    Region 65: 277 analysis texels; 17728 source-equivalent; mean RGB=(0.4307,0.3017,0.1290); stddev=0.00979; contributing triangles=3463; ordinary-language location=front center lower body and legs
+    Region 66: 267 analysis texels; 17088 source-equivalent; mean RGB=(0.5826,0.0031,0.5669); stddev=0.01070; contributing triangles=2357; ordinary-language location=side/center character-left upper torso and arms
+    Region 67: 265 analysis texels; 16960 source-equivalent; mean RGB=(0.9877,0.9079,0.7381); stddev=0.00901; contributing triangles=3122; ordinary-language location=front character-right hips and lower torso
+    Region 68: 261 analysis texels; 16704 source-equivalent; mean RGB=(0.5792,0.0009,0.5827); stddev=0.00884; contributing triangles=3187; ordinary-language location=back character-left upper torso and arms
+    Region 69: 257 analysis texels; 16448 source-equivalent; mean RGB=(0.4102,0.2853,0.1290); stddev=0.00902; contributing triangles=1182; ordinary-language location=side/center character-right lower body and legs
+    Region 70: 256 analysis texels; 16384 source-equivalent; mean RGB=(0.4322,0.3026,0.1297); stddev=0.00852; contributing triangles=2984; ordinary-language location=front center lower body and legs
+    Region 71: 256 analysis texels; 16384 source-equivalent; mean RGB=(0.8416,0.5350,0.3146); stddev=0.00702; contributing triangles=1801; ordinary-language location=side/center center upper torso and arms
+    Region 72: 255 analysis texels; 16320 source-equivalent; mean RGB=(0.5817,0.0008,0.5832); stddev=0.00979; contributing triangles=3434; ordinary-language location=back character-right upper torso and arms
+    Region 73: 251 analysis texels; 16064 source-equivalent; mean RGB=(0.6351,0.0011,0.5794); stddev=0.01162; contributing triangles=711; ordinary-language location=front center upper torso and arms
+    Region 74: 248 analysis texels; 15872 source-equivalent; mean RGB=(0.4231,0.2969,0.1375); stddev=0.00373; contributing triangles=1614; ordinary-language location=back character-right lower body and legs
+    Region 75: 247 analysis texels; 15808 source-equivalent; mean RGB=(0.9926,0.9260,0.7544); stddev=0.00843; contributing triangles=1507; ordinary-language location=front center upper torso and arms
+    Region 76: 244 analysis texels; 15616 source-equivalent; mean RGB=(0.9022,0.5688,0.3699); stddev=0.00949; contributing triangles=1585; ordinary-language location=side/center character-left lower body and legs
+    Region 77: 230 analysis texels; 14720 source-equivalent; mean RGB=(0.6382,0.0037,0.5829); stddev=0.00651; contributing triangles=367; ordinary-language location=front center upper torso and arms
+    Region 78: 229 analysis texels; 14656 source-equivalent; mean RGB=(0.9941,0.9243,0.7520); stddev=0.00569; contributing triangles=4100; ordinary-language location=back center hips and lower torso
+    Region 79: 228 analysis texels; 14592 source-equivalent; mean RGB=(0.8994,0.5636,0.3682); stddev=0.01363; contributing triangles=1507; ordinary-language location=side/center character-left lower body and legs
+    Region 80: 217 analysis texels; 13888 source-equivalent; mean RGB=(0.5779,0.0008,0.5811); stddev=0.00835; contributing triangles=3741; ordinary-language location=back character-left hips and lower torso
+    Region 81: 211 analysis texels; 13504 source-equivalent; mean RGB=(0.9902,0.9170,0.7455); stddev=0.00889; contributing triangles=2440; ordinary-language location=front character-right upper torso and arms
+    Region 82: 209 analysis texels; 13376 source-equivalent; mean RGB=(0.4062,0.2846,0.1273); stddev=0.01037; contributing triangles=873; ordinary-language location=side/center character-left lower body and legs
+    Region 83: 197 analysis texels; 12608 source-equivalent; mean RGB=(0.4261,0.2962,0.1273); stddev=0.01053; contributing triangles=681; ordinary-language location=front character-right lower body and legs
+    Region 84: 196 analysis texels; 12544 source-equivalent; mean RGB=(0.9918,0.9180,0.7481); stddev=0.00619; contributing triangles=2416; ordinary-language location=front character-right upper torso and arms
+    Region 85: 196 analysis texels; 12544 source-equivalent; mean RGB=(0.6210,0.0002,0.5733); stddev=0.01344; contributing triangles=4219; ordinary-language location=side/center character-right hips and lower torso
+    Region 86: 194 analysis texels; 12416 source-equivalent; mean RGB=(0.9946,0.9254,0.7537); stddev=0.00377; contributing triangles=3561; ordinary-language location=back center hips and lower torso
+    Region 87: 192 analysis texels; 12288 source-equivalent; mean RGB=(0.4143,0.2863,0.1132); stddev=0.01055; contributing triangles=1408; ordinary-language location=side/center center lower body and legs
+    Region 88: 192 analysis texels; 12288 source-equivalent; mean RGB=(0.8820,0.5726,0.3767); stddev=0.01334; contributing triangles=1329; ordinary-language location=front character-right lower body and legs
+    Region 89: 181 analysis texels; 11584 source-equivalent; mean RGB=(0.3905,0.2727,0.1170); stddev=0.01175; contributing triangles=1792; ordinary-language location=side/center character-left lower body and legs
+    Region 90: 177 analysis texels; 11328 source-equivalent; mean RGB=(0.9889,0.9031,0.7203); stddev=0.00500; contributing triangles=325; ordinary-language location=front character-left feet and ankles
+    Region 91: 175 analysis texels; 11200 source-equivalent; mean RGB=(0.5850,0.0008,0.5786); stddev=0.01140; contributing triangles=2716; ordinary-language location=back character-right hips and lower torso
+    Region 92: 171 analysis texels; 10944 source-equivalent; mean RGB=(0.4120,0.2859,0.1198); stddev=0.01218; contributing triangles=1437; ordinary-language location=front character-right lower body and legs
+    Region 93: 168 analysis texels; 10752 source-equivalent; mean RGB=(0.6416,0.0009,0.5842); stddev=0.00619; contributing triangles=234; ordinary-language location=front center upper torso and arms
+    Region 94: 162 analysis texels; 10368 source-equivalent; mean RGB=(0.2740,0.1675,0.0463); stddev=0.00641; contributing triangles=1332; ordinary-language location=back character-right feet and ankles
+    Region 95: 159 analysis texels; 10176 source-equivalent; mean RGB=(0.9921,0.9226,0.7514); stddev=0.01090; contributing triangles=2178; ordinary-language location=front character-left hips and lower torso
+    Region 96: 159 analysis texels; 10176 source-equivalent; mean RGB=(0.9938,0.9292,0.7577); stddev=0.00675; contributing triangles=1023; ordinary-language location=front center upper torso and arms
+    Region 97: 158 analysis texels; 10112 source-equivalent; mean RGB=(0.2577,0.1619,0.0469); stddev=0.01393; contributing triangles=1066; ordinary-language location=back center head, neck, or hair
+    Region 98: 157 analysis texels; 10048 source-equivalent; mean RGB=(0.9924,0.9241,0.7538); stddev=0.00859; contributing triangles=2372; ordinary-language location=front character-right hips and lower torso
+    Region 99: 156 analysis texels; 9984 source-equivalent; mean RGB=(0.9870,0.9088,0.7355); stddev=0.00862; contributing triangles=1480; ordinary-language location=front character-left hips and lower torso
+    Region 100: 154 analysis texels; 9856 source-equivalent; mean RGB=(0.9918,0.9198,0.7454); stddev=0.00875; contributing triangles=2568; ordinary-language location=back character-left hips and lower torso
+    Region 101: 153 analysis texels; 9792 source-equivalent; mean RGB=(0.2701,0.1638,0.0429); stddev=0.00581; contributing triangles=1482; ordinary-language location=back character-left feet and ankles
+    Region 102: 153 analysis texels; 9792 source-equivalent; mean RGB=(0.3160,0.1171,0.0986); stddev=0.00797; contributing triangles=1915; ordinary-language location=side/center center feet and ankles
+    Region 103: 150 analysis texels; 9600 source-equivalent; mean RGB=(0.9882,0.9070,0.7363); stddev=0.00983; contributing triangles=1884; ordinary-language location=front character-right hips and lower torso
+    Region 104: 144 analysis texels; 9216 source-equivalent; mean RGB=(0.0974,0.0514,0.0185); stddev=0.00701; contributing triangles=1807; ordinary-language location=back center upper torso and arms
+    Region 105: 141 analysis texels; 9024 source-equivalent; mean RGB=(0.9920,0.9111,0.7337); stddev=0.00529; contributing triangles=242; ordinary-language location=front character-right feet and ankles
+    Region 106: 141 analysis texels; 9024 source-equivalent; mean RGB=(0.9927,0.9186,0.7430); stddev=0.00839; contributing triangles=2694; ordinary-language location=back character-right hips and lower torso
+    Region 107: 138 analysis texels; 8832 source-equivalent; mean RGB=(0.5786,0.0015,0.5904); stddev=0.00745; contributing triangles=1087; ordinary-language location=back center hips and lower torso
+    Region 108: 137 analysis texels; 8768 source-equivalent; mean RGB=(0.0938,0.0512,0.0171); stddev=0.00503; contributing triangles=1608; ordinary-language location=back center upper torso and arms
+    Region 109: 135 analysis texels; 8640 source-equivalent; mean RGB=(0.4914,0.0001,0.4812); stddev=0.01188; contributing triangles=1051; ordinary-language location=side/center center upper torso and arms
+    Region 110: 135 analysis texels; 8640 source-equivalent; mean RGB=(0.9922,0.9274,0.7568); stddev=0.01000; contributing triangles=1348; ordinary-language location=front character-right hips and lower torso
+    Region 111: 135 analysis texels; 8640 source-equivalent; mean RGB=(0.2556,0.1536,0.0345); stddev=0.01190; contributing triangles=1120; ordinary-language location=back character-left feet and ankles
+    Region 112: 127 analysis texels; 8128 source-equivalent; mean RGB=(0.9736,0.8879,0.7188); stddev=0.00479; contributing triangles=179; ordinary-language location=front character-right feet and ankles
+    Region 113: 125 analysis texels; 8000 source-equivalent; mean RGB=(0.4150,0.2907,0.1321); stddev=0.01116; contributing triangles=2004; ordinary-language location=back center lower body and legs
+    Region 114: 124 analysis texels; 7936 source-equivalent; mean RGB=(0.9887,0.9159,0.7486); stddev=0.00529; contributing triangles=772; ordinary-language location=front center feet and ankles
+    Region 115: 124 analysis texels; 7936 source-equivalent; mean RGB=(0.1076,0.0549,0.0193); stddev=0.00625; contributing triangles=2201; ordinary-language location=back center upper torso and arms
+    Region 116: 121 analysis texels; 7744 source-equivalent; mean RGB=(0.5795,0.0013,0.5897); stddev=0.00694; contributing triangles=1046; ordinary-language location=back center hips and lower torso
+    Region 117: 119 analysis texels; 7616 source-equivalent; mean RGB=(0.9895,0.9034,0.7216); stddev=0.00437; contributing triangles=322; ordinary-language location=side/center character-left feet and ankles
+    Region 118: 118 analysis texels; 7552 source-equivalent; mean RGB=(0.8748,0.5656,0.3657); stddev=0.00915; contributing triangles=993; ordinary-language location=side/center character-right lower body and legs
+    Region 119: 118 analysis texels; 7552 source-equivalent; mean RGB=(0.9942,0.9240,0.7510); stddev=0.00278; contributing triangles=2506; ordinary-language location=back character-right upper torso and arms
+    Region 120: 118 analysis texels; 7552 source-equivalent; mean RGB=(0.6223,0.0001,0.5746); stddev=0.00837; contributing triangles=2497; ordinary-language location=side/center character-left hips and lower torso
+    Region 121: 117 analysis texels; 7488 source-equivalent; mean RGB=(0.6262,0.0004,0.5778); stddev=0.01009; contributing triangles=1846; ordinary-language location=front center upper torso and arms
+    Region 122: 117 analysis texels; 7488 source-equivalent; mean RGB=(0.9889,0.9200,0.7484); stddev=0.01232; contributing triangles=956; ordinary-language location=front character-right feet and ankles
+    Region 123: 116 analysis texels; 7424 source-equivalent; mean RGB=(0.4120,0.2907,0.1737); stddev=0.00452; contributing triangles=1316; ordinary-language location=side/center center feet and ankles
+    Region 124: 116 analysis texels; 7424 source-equivalent; mean RGB=(0.9915,0.9098,0.7396); stddev=0.01097; contributing triangles=2740; ordinary-language location=side/center character-right upper torso and arms
+    Region 125: 116 analysis texels; 7424 source-equivalent; mean RGB=(0.3105,0.1139,0.0915); stddev=0.01058; contributing triangles=1274; ordinary-language location=side/center character-right feet and ankles
+    Region 126: 116 analysis texels; 7424 source-equivalent; mean RGB=(0.9921,0.9138,0.7360); stddev=0.00524; contributing triangles=282; ordinary-language location=side/center character-right feet and ankles
+    Region 127: 116 analysis texels; 7424 source-equivalent; mean RGB=(0.9910,0.9184,0.7423); stddev=0.00575; contributing triangles=2121; ordinary-language location=back character-left hips and lower torso
+    Region 128: 115 analysis texels; 7360 source-equivalent; mean RGB=(0.9738,0.8889,0.7222); stddev=0.00481; contributing triangles=293; ordinary-language location=side/center center feet and ankles
+    Region 129: 114 analysis texels; 7296 source-equivalent; mean RGB=(0.5755,0.0008,0.5787); stddev=0.00674; contributing triangles=1218; ordinary-language location=back character-left hips and lower torso
+    Region 130: 113 analysis texels; 7232 source-equivalent; mean RGB=(0.9888,0.9085,0.7372); stddev=0.00605; contributing triangles=2686; ordinary-language location=side/center character-left upper torso and arms
+    Region 131: 111 analysis texels; 7104 source-equivalent; mean RGB=(0.0978,0.0533,0.0185); stddev=0.00706; contributing triangles=1629; ordinary-language location=back center upper torso and arms
+    Region 132: 109 analysis texels; 6976 source-equivalent; mean RGB=(0.6065,0.0006,0.5698); stddev=0.01024; contributing triangles=1752; ordinary-language location=side/center character-left hips and lower torso
+    Region 133: 108 analysis texels; 6912 source-equivalent; mean RGB=(0.8565,0.5013,0.3230); stddev=0.01289; contributing triangles=1083; ordinary-language location=side/center character-left lower body and legs
+    Region 134: 102 analysis texels; 6528 source-equivalent; mean RGB=(0.9909,0.9108,0.7333); stddev=0.00850; contributing triangles=1925; ordinary-language location=side/center character-right hips and lower torso
+    Region 135: 102 analysis texels; 6528 source-equivalent; mean RGB=(0.9924,0.9092,0.7289); stddev=0.00742; contributing triangles=1103; ordinary-language location=side/center character-left hips and lower torso
+    Region 136: 101 analysis texels; 6464 source-equivalent; mean RGB=(0.8571,0.5495,0.3634); stddev=0.01096; contributing triangles=1261; ordinary-language location=front character-right lower body and legs
+    Region 137: 100 analysis texels; 6400 source-equivalent; mean RGB=(0.9779,0.8925,0.7269); stddev=0.00319; contributing triangles=237; ordinary-language location=side/center center feet and ankles
+    Region 138: 98 analysis texels; 6272 source-equivalent; mean RGB=(0.9903,0.9208,0.7508); stddev=0.00456; contributing triangles=730; ordinary-language location=front center feet and ankles
+    Region 139: 98 analysis texels; 6272 source-equivalent; mean RGB=(0.9948,0.9326,0.7626); stddev=0.00776; contributing triangles=1324; ordinary-language location=front character-left hips and lower torso
+    Region 140: 97 analysis texels; 6208 source-equivalent; mean RGB=(0.8809,0.5692,0.3638); stddev=0.00998; contributing triangles=714; ordinary-language location=side/center character-right lower body and legs
+    Region 141: 96 analysis texels; 6144 source-equivalent; mean RGB=(0.4209,0.2950,0.1856); stddev=0.00514; contributing triangles=1179; ordinary-language location=side/center center feet and ankles
+    Region 142: 95 analysis texels; 6080 source-equivalent; mean RGB=(0.6196,0.0003,0.5715); stddev=0.01126; contributing triangles=933; ordinary-language location=front center hips and lower torso
+    Region 143: 94 analysis texels; 6016 source-equivalent; mean RGB=(0.8312,0.5375,0.3167); stddev=0.00628; contributing triangles=1011; ordinary-language location=side/center center upper torso and arms
+    Region 144: 93 analysis texels; 5952 source-equivalent; mean RGB=(0.4082,0.2851,0.1292); stddev=0.00876; contributing triangles=328; ordinary-language location=back center lower body and legs
+    Region 145: 93 analysis texels; 5952 source-equivalent; mean RGB=(0.5122,0.4146,0.2729); stddev=0.01379; contributing triangles=800; ordinary-language location=back center head, neck, or hair
+    Region 146: 91 analysis texels; 5824 source-equivalent; mean RGB=(0.9954,0.9289,0.7473); stddev=0.00416; contributing triangles=804; ordinary-language location=side/center character-right feet and ankles
+    Region 147: 90 analysis texels; 5760 source-equivalent; mean RGB=(0.8993,0.7788,0.5931); stddev=0.00468; contributing triangles=45; ordinary-language location=front character-right feet and ankles
+    Region 148: 90 analysis texels; 5760 source-equivalent; mean RGB=(0.6224,0.0001,0.5744); stddev=0.00803; contributing triangles=804; ordinary-language location=front center hips and lower torso
+    Region 149: 90 analysis texels; 5760 source-equivalent; mean RGB=(0.5766,0.0003,0.5808); stddev=0.01247; contributing triangles=785; ordinary-language location=side/center character-left hips and lower torso
+    Region 150: 88 analysis texels; 5632 source-equivalent; mean RGB=(0.9943,0.9323,0.7629); stddev=0.00594; contributing triangles=1171; ordinary-language location=front character-right hips and lower torso
+    Region 151: 87 analysis texels; 5568 source-equivalent; mean RGB=(0.9939,0.9256,0.7518); stddev=0.00505; contributing triangles=915; ordinary-language location=back center hips and lower torso
+    Region 152: 87 analysis texels; 5568 source-equivalent; mean RGB=(0.9731,0.8884,0.7251); stddev=0.00309; contributing triangles=122; ordinary-language location=front center feet and ankles
+    Region 153: 85 analysis texels; 5440 source-equivalent; mean RGB=(0.5800,0.0000,0.5343); stddev=0.00975; contributing triangles=1291; ordinary-language location=back center upper torso and arms
+    Region 154: 85 analysis texels; 5440 source-equivalent; mean RGB=(0.9794,0.8991,0.7208); stddev=0.00591; contributing triangles=1473; ordinary-language location=front character-left hips and lower torso
+    Region 155: 84 analysis texels; 5376 source-equivalent; mean RGB=(0.9825,0.9064,0.7377); stddev=0.00935; contributing triangles=870; ordinary-language location=front character-right hips and lower torso
+    Region 156: 81 analysis texels; 5184 source-equivalent; mean RGB=(0.8544,0.5470,0.3602); stddev=0.01049; contributing triangles=1329; ordinary-language location=front character-left lower body and legs
+    Region 157: 81 analysis texels; 5184 source-equivalent; mean RGB=(0.4080,0.2864,0.1656); stddev=0.00305; contributing triangles=1013; ordinary-language location=side/center character-left feet and ankles
+    Region 158: 79 analysis texels; 5056 source-equivalent; mean RGB=(0.3495,0.2378,0.0758); stddev=0.01219; contributing triangles=1274; ordinary-language location=front center lower body and legs
+    Region 159: 79 analysis texels; 5056 source-equivalent; mean RGB=(0.8410,0.5375,0.3172); stddev=0.00724; contributing triangles=1341; ordinary-language location=side/center center upper torso and arms
+    Region 160: 77 analysis texels; 4928 source-equivalent; mean RGB=(0.9937,0.9254,0.7523); stddev=0.00444; contributing triangles=532; ordinary-language location=back center hips and lower torso
+    Region 161: 77 analysis texels; 4928 source-equivalent; mean RGB=(0.6190,0.0020,0.5749); stddev=0.00635; contributing triangles=512; ordinary-language location=front center upper torso and arms
+    Region 162: 76 analysis texels; 4864 source-equivalent; mean RGB=(0.8993,0.7794,0.5936); stddev=0.00471; contributing triangles=44; ordinary-language location=front character-left feet and ankles
+    Region 163: 76 analysis texels; 4864 source-equivalent; mean RGB=(0.5806,0.0003,0.5826); stddev=0.01063; contributing triangles=540; ordinary-language location=side/center character-right hips and lower torso
+    Region 164: 74 analysis texels; 4736 source-equivalent; mean RGB=(0.5883,0.0005,0.5743); stddev=0.01047; contributing triangles=1446; ordinary-language location=side/center character-left hips and lower torso
+    Region 165: 72 analysis texels; 4608 source-equivalent; mean RGB=(0.3176,0.1147,0.0992); stddev=0.00615; contributing triangles=663; ordinary-language location=side/center center feet and ankles
+    Region 166: 72 analysis texels; 4608 source-equivalent; mean RGB=(0.9691,0.8856,0.7203); stddev=0.00381; contributing triangles=102; ordinary-language location=front center feet and ankles
+    Region 167: 71 analysis texels; 4544 source-equivalent; mean RGB=(0.5752,0.0002,0.5280); stddev=0.00773; contributing triangles=1130; ordinary-language location=back center upper torso and arms
+    Region 168: 71 analysis texels; 4544 source-equivalent; mean RGB=(0.3785,0.2594,0.0975); stddev=0.00830; contributing triangles=571; ordinary-language location=side/center center lower body and legs
+    Region 169: 71 analysis texels; 4544 source-equivalent; mean RGB=(0.8889,0.5544,0.3622); stddev=0.01352; contributing triangles=184; ordinary-language location=front character-right lower body and legs
+    Region 170: 70 analysis texels; 4480 source-equivalent; mean RGB=(0.3160,0.1134,0.0966); stddev=0.01092; contributing triangles=780; ordinary-language location=side/center character-right feet and ankles
+    Region 171: 70 analysis texels; 4480 source-equivalent; mean RGB=(0.5881,0.0001,0.5835); stddev=0.00208; contributing triangles=216; ordinary-language location=back character-left upper torso and arms
+    Region 172: 67 analysis texels; 4288 source-equivalent; mean RGB=(0.4098,0.2878,0.1304); stddev=0.00788; contributing triangles=429; ordinary-language location=side/center character-right lower body and legs
+    Region 173: 65 analysis texels; 4160 source-equivalent; mean RGB=(0.8578,0.5605,0.3684); stddev=0.00620; contributing triangles=758; ordinary-language location=side/center character-left hips and lower torso
+    Region 174: 64 analysis texels; 4096 source-equivalent; mean RGB=(0.8306,0.5384,0.3173); stddev=0.00762; contributing triangles=888; ordinary-language location=side/center center upper torso and arms
+    Region 175: 64 analysis texels; 4096 source-equivalent; mean RGB=(0.5513,0.4330,0.2865); stddev=0.00743; contributing triangles=338; ordinary-language location=side/center center head, neck, or hair
+    Region 176: 62 analysis texels; 3968 source-equivalent; mean RGB=(0.8551,0.5133,0.3370); stddev=0.01055; contributing triangles=776; ordinary-language location=side/center character-left feet and ankles
+    Region 177: 60 analysis texels; 3840 source-equivalent; mean RGB=(0.9785,0.8951,0.7205); stddev=0.00675; contributing triangles=1057; ordinary-language location=front character-right hips and lower torso
+    Region 178: 59 analysis texels; 3776 source-equivalent; mean RGB=(0.4100,0.2885,0.1683); stddev=0.00532; contributing triangles=758; ordinary-language location=side/center character-left feet and ankles
+    Region 179: 58 analysis texels; 3712 source-equivalent; mean RGB=(0.9833,0.9033,0.7340); stddev=0.00723; contributing triangles=616; ordinary-language location=front character-right upper torso and arms
+    Region 180: 56 analysis texels; 3584 source-equivalent; mean RGB=(0.1854,0.1216,0.0176); stddev=0.01280; contributing triangles=307; ordinary-language location=front center head, neck, or hair
+    Region 181: 55 analysis texels; 3520 source-equivalent; mean RGB=(0.8391,0.5475,0.3639); stddev=0.00537; contributing triangles=451; ordinary-language location=side/center character-left feet and ankles
+    Region 182: 55 analysis texels; 3520 source-equivalent; mean RGB=(0.8653,0.5222,0.3297); stddev=0.01055; contributing triangles=567; ordinary-language location=front character-right lower body and legs
+    Region 183: 55 analysis texels; 3520 source-equivalent; mean RGB=(0.2616,0.1559,0.0344); stddev=0.00939; contributing triangles=574; ordinary-language location=back character-right feet and ankles
+    Region 184: 53 analysis texels; 3392 source-equivalent; mean RGB=(0.9024,0.7835,0.5964); stddev=0.00602; contributing triangles=164; ordinary-language location=side/center center feet and ankles
+    Region 185: 53 analysis texels; 3392 source-equivalent; mean RGB=(0.2447,0.1742,0.0209); stddev=0.01234; contributing triangles=455; ordinary-language location=side/center center head, neck, or hair
+    Region 186: 53 analysis texels; 3392 source-equivalent; mean RGB=(0.2877,0.1924,0.0775); stddev=0.01015; contributing triangles=506; ordinary-language location=back center head, neck, or hair
+  Marked evidence renders:
+    front: /home/runner/workspace/tools/character-renderer/renders/unmapped-texture-diagnostic/buzz/front-marked.png -> asset_wPQtUF5PmiK1WsasNDFEHksH
+    back: /home/runner/workspace/tools/character-renderer/renders/unmapped-texture-diagnostic/buzz/back-marked.png -> asset_KN9VeMDHmuDAhoHMWCHkCYiE
+
+CHILL
+  Scenario source asset: asset_6HNbTLLYWmRLB7AtmFdvfQt2
+  Fresh diagnostic source file: unmapped-chill-fresh-probe.glb
+  Source path: /home/runner/workspace/tools/character-renderer/models/unmapped-chill-fresh-probe.glb
+  Source SHA-256 before/after: ddec9faa58932c781085d984d7c86ac8d452edc62a134d68a4b406d9385faad3 (unchanged)
+  Mesh: mesh_node
+    Base-color atlas: base_color.001 (4096x4096)
+    Used texture area: 204203 analysis texels; 13068992 source-equivalent texels
+    Absolute significant flat-fill area: 13073 analysis texels; 836672 source-equivalent texels
+    Flat-fill percentage of used area: 6.402%
+    Connected significant-region count: 74
+    Largest region sizes: 796 analysis / 50944 source-equivalent, 666 analysis / 42624 source-equivalent, 656 analysis / 41984 source-equivalent, 609 analysis / 38976 source-equivalent, 557 analysis / 35648 source-equivalent, 552 analysis / 35328 source-equivalent, 446 analysis / 28544 source-equivalent, 399 analysis / 25536 source-equivalent
+    Region 1: 796 analysis texels; 50944 source-equivalent; mean RGB=(0.6546,0.4257,0.1894); stddev=0.00508; contributing triangles=6660; ordinary-language location=side/center character-left feet and ankles
+    Region 2: 666 analysis texels; 42624 source-equivalent; mean RGB=(0.9872,0.6935,0.4209); stddev=0.01339; contributing triangles=3575; ordinary-language location=back center head, neck, or hair
+    Region 3: 656 analysis texels; 41984 source-equivalent; mean RGB=(0.1217,0.1069,0.0938); stddev=0.01374; contributing triangles=7382; ordinary-language location=side/center center lower body and legs
+    Region 4: 609 analysis texels; 38976 source-equivalent; mean RGB=(0.6650,0.4343,0.1943); stddev=0.00632; contributing triangles=5361; ordinary-language location=side/center character-right feet and ankles
+    Region 5: 557 analysis texels; 35648 source-equivalent; mean RGB=(0.4276,0.3766,0.3361); stddev=0.01119; contributing triangles=2847; ordinary-language location=back character-left lower body and legs
+    Region 6: 552 analysis texels; 35328 source-equivalent; mean RGB=(0.0754,0.0017,0.0024); stddev=0.00483; contributing triangles=3027; ordinary-language location=front center head, neck, or hair
+    Region 7: 446 analysis texels; 28544 source-equivalent; mean RGB=(0.6565,0.4265,0.1903); stddev=0.00574; contributing triangles=4254; ordinary-language location=side/center character-left feet and ankles
+    Region 8: 399 analysis texels; 25536 source-equivalent; mean RGB=(0.6687,0.4392,0.1963); stddev=0.00675; contributing triangles=2617; ordinary-language location=back character-right feet and ankles
+    Region 9: 358 analysis texels; 22912 source-equivalent; mean RGB=(0.2381,0.6468,0.1192); stddev=0.01186; contributing triangles=1260; ordinary-language location=back center upper torso and arms
+    Region 10: 321 analysis texels; 20544 source-equivalent; mean RGB=(0.6622,0.4344,0.1915); stddev=0.00589; contributing triangles=3039; ordinary-language location=side/center character-right feet and ankles
+    Region 11: 317 analysis texels; 20288 source-equivalent; mean RGB=(0.0704,0.0282,0.0252); stddev=0.01144; contributing triangles=4532; ordinary-language location=front center upper torso and arms
+    Region 12: 277 analysis texels; 17728 source-equivalent; mean RGB=(0.4253,0.3746,0.3362); stddev=0.01392; contributing triangles=1156; ordinary-language location=side/center character-left lower body and legs
+    Region 13: 264 analysis texels; 16896 source-equivalent; mean RGB=(0.9760,0.6802,0.3977); stddev=0.01391; contributing triangles=810; ordinary-language location=back center head, neck, or hair
+    Region 14: 261 analysis texels; 16704 source-equivalent; mean RGB=(0.0703,0.0007,0.0012); stddev=0.00700; contributing triangles=2875; ordinary-language location=front center head, neck, or hair
+    Region 15: 249 analysis texels; 15936 source-equivalent; mean RGB=(0.9441,0.9059,0.9297); stddev=0.01175; contributing triangles=3042; ordinary-language location=side/center character-right lower body and legs
+    Region 16: 244 analysis texels; 15616 source-equivalent; mean RGB=(0.1216,0.1078,0.0955); stddev=0.01156; contributing triangles=3040; ordinary-language location=back character-right lower body and legs
+    Region 17: 226 analysis texels; 14464 source-equivalent; mean RGB=(0.9303,0.8977,0.9133); stddev=0.01046; contributing triangles=3700; ordinary-language location=back center feet and ankles
+    Region 18: 199 analysis texels; 12736 source-equivalent; mean RGB=(0.1827,0.5810,0.0670); stddev=0.01341; contributing triangles=1746; ordinary-language location=back center upper torso and arms
+    Region 19: 197 analysis texels; 12608 source-equivalent; mean RGB=(0.1490,0.5328,0.0521); stddev=0.01146; contributing triangles=1827; ordinary-language location=back character-left hips and lower torso
+    Region 20: 184 analysis texels; 11776 source-equivalent; mean RGB=(0.1579,0.5457,0.0555); stddev=0.01079; contributing triangles=1798; ordinary-language location=back character-left hips and lower torso
+    Region 21: 172 analysis texels; 11008 source-equivalent; mean RGB=(0.6662,0.4361,0.1928); stddev=0.00351; contributing triangles=1366; ordinary-language location=front character-right feet and ankles
+    Region 22: 168 analysis texels; 10752 source-equivalent; mean RGB=(0.4488,0.3961,0.3584); stddev=0.01056; contributing triangles=922; ordinary-language location=back center lower body and legs
+    Region 23: 165 analysis texels; 10560 source-equivalent; mean RGB=(0.1339,0.1207,0.1049); stddev=0.00980; contributing triangles=1952; ordinary-language location=side/center center lower body and legs
+    Region 24: 163 analysis texels; 10432 source-equivalent; mean RGB=(0.1631,0.5401,0.0582); stddev=0.01282; contributing triangles=1693; ordinary-language location=back center hips and lower torso
+    Region 25: 163 analysis texels; 10432 source-equivalent; mean RGB=(0.1784,0.5684,0.0669); stddev=0.01359; contributing triangles=638; ordinary-language location=back center hips and lower torso
+    Region 26: 161 analysis texels; 10304 source-equivalent; mean RGB=(0.9735,0.6844,0.3790); stddev=0.01133; contributing triangles=480; ordinary-language location=back center head, neck, or hair
+    Region 27: 159 analysis texels; 10176 source-equivalent; mean RGB=(0.9825,0.6909,0.3953); stddev=0.00960; contributing triangles=907; ordinary-language location=back center head, neck, or hair
+    Region 28: 148 analysis texels; 9472 source-equivalent; mean RGB=(0.1327,0.1196,0.1055); stddev=0.00797; contributing triangles=1795; ordinary-language location=back center lower body and legs
+    Region 29: 140 analysis texels; 8960 source-equivalent; mean RGB=(0.1411,0.1306,0.1156); stddev=0.00445; contributing triangles=1080; ordinary-language location=back center lower body and legs
+    Region 30: 139 analysis texels; 8896 source-equivalent; mean RGB=(0.9309,0.8921,0.9160); stddev=0.00786; contributing triangles=1677; ordinary-language location=back center feet and ankles
+    Region 31: 137 analysis texels; 8768 source-equivalent; mean RGB=(0.6637,0.4334,0.1931); stddev=0.00481; contributing triangles=844; ordinary-language location=side/center character-right feet and ankles
+    Region 32: 132 analysis texels; 8448 source-equivalent; mean RGB=(0.6725,0.4415,0.2008); stddev=0.00943; contributing triangles=1172; ordinary-language location=side/center character-right feet and ankles
+    Region 33: 126 analysis texels; 8064 source-equivalent; mean RGB=(0.9993,0.7061,0.4411); stddev=0.00574; contributing triangles=578; ordinary-language location=front center head, neck, or hair
+    Region 34: 121 analysis texels; 7744 source-equivalent; mean RGB=(0.0791,0.0011,0.0016); stddev=0.00958; contributing triangles=711; ordinary-language location=front center head, neck, or hair
+    Region 35: 121 analysis texels; 7744 source-equivalent; mean RGB=(0.1404,0.1252,0.1110); stddev=0.01156; contributing triangles=1563; ordinary-language location=front center lower body and legs
+    Region 36: 119 analysis texels; 7616 source-equivalent; mean RGB=(0.9926,0.7041,0.4377); stddev=0.00921; contributing triangles=574; ordinary-language location=side/center center head, neck, or hair
+    Region 37: 118 analysis texels; 7552 source-equivalent; mean RGB=(0.1824,0.5713,0.0652); stddev=0.01369; contributing triangles=850; ordinary-language location=back center upper torso and arms
+    Region 38: 118 analysis texels; 7552 source-equivalent; mean RGB=(0.1309,0.1169,0.1030); stddev=0.00797; contributing triangles=1392; ordinary-language location=back center lower body and legs
+    Region 39: 106 analysis texels; 6784 source-equivalent; mean RGB=(0.9878,0.9673,0.9821); stddev=0.00834; contributing triangles=666; ordinary-language location=front center hips and lower torso
+    Region 40: 104 analysis texels; 6656 source-equivalent; mean RGB=(0.6865,0.2601,0.1338); stddev=0.01173; contributing triangles=832; ordinary-language location=side/center character-right hips and lower torso
+    Region 41: 103 analysis texels; 6592 source-equivalent; mean RGB=(0.0837,0.0332,0.0300); stddev=0.00936; contributing triangles=1235; ordinary-language location=front center upper torso and arms
+    Region 42: 101 analysis texels; 6464 source-equivalent; mean RGB=(0.7089,0.2698,0.1311); stddev=0.00759; contributing triangles=745; ordinary-language location=side/center center upper torso and arms
+    Region 43: 100 analysis texels; 6400 source-equivalent; mean RGB=(0.1472,0.1270,0.1080); stddev=0.01170; contributing triangles=1290; ordinary-language location=front center lower body and legs
+    Region 44: 98 analysis texels; 6272 source-equivalent; mean RGB=(0.3727,0.0009,0.0012); stddev=0.01154; contributing triangles=566; ordinary-language location=front center head, neck, or hair
+    Region 45: 94 analysis texels; 6016 source-equivalent; mean RGB=(0.0766,0.0021,0.0025); stddev=0.00526; contributing triangles=537; ordinary-language location=front center head, neck, or hair
+    Region 46: 92 analysis texels; 5888 source-equivalent; mean RGB=(0.9833,0.6884,0.3994); stddev=0.01095; contributing triangles=480; ordinary-language location=back center head, neck, or hair
+    Region 47: 89 analysis texels; 5696 source-equivalent; mean RGB=(0.9651,0.6611,0.3696); stddev=0.00727; contributing triangles=239; ordinary-language location=side/center center head, neck, or hair
+    Region 48: 86 analysis texels; 5504 source-equivalent; mean RGB=(0.6623,0.4290,0.1924); stddev=0.00716; contributing triangles=1111; ordinary-language location=back character-left feet and ankles
+    Region 49: 85 analysis texels; 5440 source-equivalent; mean RGB=(0.7282,0.3126,0.1743); stddev=0.01057; contributing triangles=312; ordinary-language location=side/center character-right hips and lower torso
+    Region 50: 81 analysis texels; 5184 source-equivalent; mean RGB=(0.6616,0.4342,0.1932); stddev=0.00737; contributing triangles=909; ordinary-language location=front character-left feet and ankles
+    Region 51: 81 analysis texels; 5184 source-equivalent; mean RGB=(0.6602,0.4337,0.1940); stddev=0.00849; contributing triangles=952; ordinary-language location=side/center character-left feet and ankles
+    Region 52: 78 analysis texels; 4992 source-equivalent; mean RGB=(0.9852,0.8304,0.0033); stddev=0.01381; contributing triangles=514; ordinary-language location=front character-right feet and ankles
+    Region 53: 78 analysis texels; 4992 source-equivalent; mean RGB=(0.7042,0.2766,0.1551); stddev=0.00913; contributing triangles=421; ordinary-language location=side/center center upper torso and arms
+    Region 54: 75 analysis texels; 4800 source-equivalent; mean RGB=(0.7078,0.2769,0.1459); stddev=0.00552; contributing triangles=606; ordinary-language location=back center upper torso and arms
+    Region 55: 74 analysis texels; 4736 source-equivalent; mean RGB=(0.9873,0.9652,0.9802); stddev=0.01053; contributing triangles=577; ordinary-language location=front center hips and lower torso
+    Region 56: 74 analysis texels; 4736 source-equivalent; mean RGB=(0.4348,0.3832,0.3415); stddev=0.00502; contributing triangles=384; ordinary-language location=back character-left lower body and legs
+    Region 57: 71 analysis texels; 4544 source-equivalent; mean RGB=(0.1410,0.1307,0.1139); stddev=0.00421; contributing triangles=644; ordinary-language location=back center lower body and legs
+    Region 58: 69 analysis texels; 4416 source-equivalent; mean RGB=(0.9811,0.6900,0.4013); stddev=0.00576; contributing triangles=344; ordinary-language location=front center head, neck, or hair
+    Region 59: 67 analysis texels; 4288 source-equivalent; mean RGB=(0.1096,0.0990,0.0872); stddev=0.01027; contributing triangles=953; ordinary-language location=side/center character-right lower body and legs
+    Region 60: 67 analysis texels; 4288 source-equivalent; mean RGB=(0.9769,0.6851,0.3813); stddev=0.00698; contributing triangles=251; ordinary-language location=back center head, neck, or hair
+    Region 61: 67 analysis texels; 4288 source-equivalent; mean RGB=(0.7069,0.2782,0.1525); stddev=0.00481; contributing triangles=445; ordinary-language location=back center upper torso and arms
+    Region 62: 66 analysis texels; 4224 source-equivalent; mean RGB=(0.9406,0.9023,0.9320); stddev=0.01082; contributing triangles=280; ordinary-language location=back character-right feet and ankles
+    Region 63: 65 analysis texels; 4160 source-equivalent; mean RGB=(0.1009,0.0386,0.0346); stddev=0.01349; contributing triangles=732; ordinary-language location=front center upper torso and arms
+    Region 64: 65 analysis texels; 4160 source-equivalent; mean RGB=(0.9934,0.7141,0.4455); stddev=0.00845; contributing triangles=247; ordinary-language location=side/center center head, neck, or hair
+    Region 65: 65 analysis texels; 4160 source-equivalent; mean RGB=(0.7127,0.2816,0.1496); stddev=0.00307; contributing triangles=305; ordinary-language location=side/center center upper torso and arms
+    Region 66: 62 analysis texels; 3968 source-equivalent; mean RGB=(0.9837,0.9603,0.9738); stddev=0.01370; contributing triangles=280; ordinary-language location=front center upper torso and arms
+    Region 67: 61 analysis texels; 3904 source-equivalent; mean RGB=(0.9463,0.9112,0.9427); stddev=0.00766; contributing triangles=514; ordinary-language location=side/center center lower body and legs
+    Region 68: 60 analysis texels; 3840 source-equivalent; mean RGB=(0.1362,0.1233,0.1093); stddev=0.00207; contributing triangles=585; ordinary-language location=back character-right lower body and legs
+    Region 69: 60 analysis texels; 3840 source-equivalent; mean RGB=(0.6673,0.4357,0.1936); stddev=0.00603; contributing triangles=435; ordinary-language location=back center feet and ankles
+    Region 70: 58 analysis texels; 3712 source-equivalent; mean RGB=(0.6591,0.4284,0.1925); stddev=0.00493; contributing triangles=728; ordinary-language location=back character-left feet and ankles
+    Region 71: 58 analysis texels; 3712 source-equivalent; mean RGB=(0.0756,0.0022,0.0029); stddev=0.00340; contributing triangles=321; ordinary-language location=front center head, neck, or hair
+    Region 72: 57 analysis texels; 3648 source-equivalent; mean RGB=(0.0202,0.2452,0.0105); stddev=0.00403; contributing triangles=410; ordinary-language location=back center upper torso and arms
+    Region 73: 54 analysis texels; 3456 source-equivalent; mean RGB=(0.9457,0.9086,0.9344); stddev=0.00889; contributing triangles=460; ordinary-language location=side/center center lower body and legs
+    Region 74: 54 analysis texels; 3456 source-equivalent; mean RGB=(0.0746,0.0011,0.0009); stddev=0.00959; contributing triangles=566; ordinary-language location=front center head, neck, or hair
+  Marked evidence renders:
+    front: /home/runner/workspace/tools/character-renderer/renders/unmapped-texture-diagnostic/chill/front-marked.png -> asset_WCqQoS6tntDFNrDx3uRLRoc2
+    back: /home/runner/workspace/tools/character-renderer/renders/unmapped-texture-diagnostic/chill/back-marked.png -> asset_hVwR22Xtzam8rqesLF5zfN3V
+
