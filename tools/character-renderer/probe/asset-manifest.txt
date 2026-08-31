@@ -1,0 +1,29 @@
+renders/inspection/buzz-still-a-pose/full-face.png | 463x460 | asset_Z9bfxmdbT4dWRBf4k9druV81
+renders/inspection/buzz-still-a-pose/full-hands.png | 902x598 | asset_Rh8VVSYK9XpBHTBDf9odymhL
+renders/inspection/buzz-still-a-pose/full-legs.png | 850x694 | asset_kuvuoWskvqYf9WDpfW72qXoc
+renders/inspection/chill-animated-idle/frame-001-legs.png | 482x693 | asset_dy6prLr8rh3DTB8FThdgTBvE
+renders/inspection/chill-animated-idle/frame-093-legs.png | 493x692 | asset_xdwy9TeZsSFtCtmejftSu1JM
+renders/inspection/chill-animated-idle/frame-185-face.png | 356x453 | asset_miT1yqawQPLExNtauSPjLySp
+renders/inspection/chill-animated-idle/frame-185-hands.png | 529x587 | asset_HHd2bEGd7TMfxzePJYP5ZvEb
+renders/inspection/chill-animated-idle/frame-185-legs.png | 532x682 | asset_tehKNk7izUsVWMRtuEdN8ou6
+renders/inspection/chill-animated-idle/frame-277-legs.png | 499x686 | asset_ADp5whZmeYHZWJcPT1PegyZc
+renders/inspection/chill-animated-idle/frame-369-legs.png | 482x693 | asset_ZNfk46MS8zDcgAfaeXkoCWwE
+renders/inspection/chill-still-a-pose/full-face.png | 415x405 | asset_6DECAZYtzXZkhuN6cbrw7YSa
+renders/inspection/chill-still-a-pose/full-hands.png | 964x524 | asset_j3cjrXGfEHrvwmrG9Ez1pQFd
+renders/inspection/chill-still-a-pose/full-legs.png | 910x607 | asset_RdfADiYvTJndsCgxqzSSeAKa
+probe/posed-test-control.png | 1024x1536 | asset_E8YuCDXK8Yo6XMa3WU4vQCyH
+probe/posed-test.png | 1024x1536 | asset_vMxbGaks9Tnz949w68CwMenv
+renders/court-scene/beef/character.png | 1024x1536 | asset_HTY6ZRfpAxYZRgVTrEGWCxng | source_file=court-beef-rigged-fresh-v2.glb;character=BEEF;kind=main;ground_anchor_px=470,1470
+renders/court-scene/beef/hands-wrists.png | 1024x1536 | asset_AcW1FJ35s43VhJUXqGmDFCSo | source_file=court-beef-rigged-fresh-v2.glb;character=BEEF;kind=hands-wrists
+renders/court-scene/rico/character.png | 1024x1536 | asset_7Up1BhMjVmJG7T2ZG8T3TRZU | source_file=court-rico-rigged-fresh-v2.glb;character=RICO;kind=main;ground_anchor_px=420,1482
+renders/court-scene/rico/hands-wrists.png | 1024x1536 | asset_nkH883yXUPbT5SDQFGR5m96K | source_file=court-rico-rigged-fresh-v2.glb;character=RICO;kind=hands-wrists
+renders/court-scene/buzz/character.png | 1024x1536 | asset_prDn84nPvkvE4LKVYpG9nuhb | source_file=court-buzz-rigged-fresh-v2.glb;character=BUZZ;kind=main;ground_anchor_px=469,1201
+renders/court-scene/buzz/hands-wrists.png | 1024x1536 | asset_32kbHAnYf1EjxXDfpfDD5p3Z | source_file=court-buzz-rigged-fresh-v2.glb;character=BUZZ;kind=hands-wrists
+renders/unmapped-texture-diagnostic/buzz/front-marked.png | 1024x1536 | asset_wPQtUF5PmiK1WsasNDFEHksH | diagnostic=unmapped-texture;character=BUZZ;view=front;source_asset=asset_BsNceokZCmvnTr9m76CWHBDB;source_file=unmapped-buzz-fresh-probe.glb
+renders/unmapped-texture-diagnostic/buzz/back-marked.png | 1024x1536 | asset_KN9VeMDHmuDAhoHMWCHkCYiE | diagnostic=unmapped-texture;character=BUZZ;view=back;source_asset=asset_BsNceokZCmvnTr9m76CWHBDB;source_file=unmapped-buzz-fresh-probe.glb
+renders/unmapped-texture-diagnostic/chill/front-marked.png | 1024x1536 | asset_WCqQoS6tntDFNrDx3uRLRoc2 | diagnostic=unmapped-texture;character=CHILL;view=front;source_asset=asset_6HNbTLLYWmRLB7AtmFdvfQt2;source_file=unmapped-chill-fresh-probe.glb
+renders/unmapped-texture-diagnostic/chill/back-marked.png | 1024x1536 | asset_hVwR22Xtzam8rqesLF5zfN3V | diagnostic=unmapped-texture;character=CHILL;view=back;source_asset=asset_6HNbTLLYWmRLB7AtmFdvfQt2;source_file=unmapped-chill-fresh-probe.glb
+renders/court-scene/chill/wall-lean/character.png | 1024x1536 | asset_r2FKNRr3DDP8MoqBYedjaTEj | source_file=court-chill-rigged-fresh-v2.glb;character=CHILL;kind=main;ground_anchor_px=547,1474;variant=wall-lean;variant_label=Shoulder lean with raised sole
+renders/court-scene/chill/wall-lean/hands-wrists.png | 1024x1536 | asset_3bcKCJT68EHSQ3Zjch8NK3QM | source_file=court-chill-rigged-fresh-v2.glb;character=CHILL;kind=hands-wrists;variant=wall-lean;variant_label=Shoulder lean with raised sole
+renders/court-scene/chill/free-standing/character.png | 1024x1536 | asset_ug7kSxvEZWURbTEA7Rs3sHdc | source_file=court-chill-rigged-fresh-v2.glb;character=CHILL;kind=main;ground_anchor_px=552,1482;variant=free-standing;variant_label=Free-standing relaxed fallback
+renders/court-scene/chill/free-standing/hands-wrists.png | 1024x1536 | asset_LKBW9gCyW6dkgZYiSVotMRB5 | source_file=court-chill-rigged-fresh-v2.glb;character=CHILL;kind=hands-wrists;variant=free-standing;variant_label=Free-standing relaxed fallback
