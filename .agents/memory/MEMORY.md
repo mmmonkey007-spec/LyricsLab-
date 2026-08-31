@@ -1,0 +1,7 @@
+- [AsyncStorage key preservation](asyncstorage-keys.md) — WC→OG TS renames must NOT change AsyncStorage key strings or URL param names; serialised state would break.
+- [DimensionScores humorCraft](dimension-scores.md) — humorCraft was added to DimensionScores; all score literal objects in write.tsx must include it (battle scores default to 0 until API returns it).
+- [Bronze battle fairness gate](bronze-battle-fairness-gate.md) — bot battles remain unscored verse exchanges until dialect-fairness validation is complete.
+- [Character art assets](character-art-assets.md) — locked character art must be saved locally; never substitute placeholders or runtime signed URLs.
+- [Build-time 3D rendering](build-time-3d-rendering.md) — 3D models are rendered into PNGs outside LyricLab; meshes and 3D runtimes never ship in the mobile app.
+- [Scoring transparency](scoring-transparency.md) — final scores must be derived only from the dimensions visible to players.
+- [Renderer contact supports](renderer-contact-supports.md) — authoring supports may exist for posing, but validation is based on camera visibility and images must still be saved after failures.
