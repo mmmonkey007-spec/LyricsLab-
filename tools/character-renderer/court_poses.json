@@ -1,0 +1,204 @@
+{
+  "version": 2,
+  "description": "Night-court character poses for the build-time transparent renderer.",
+  "settings": {
+    "width": 1024,
+    "height": 1536,
+    "camera": {
+      "location": [0.0, -3.2, 1.0],
+      "target": [0.0, 0.2, 0.55],
+      "ortho_scale": 1.6,
+      "clip_end": 100.0
+    },
+    "rig_rotation_degrees": 90.0,
+    "rig_rotation_correction_degrees": -90.0,
+    "crop_ortho_scale": 0.38,
+    "orientation_correction_degrees": -90.0,
+    "normalized_height": 1.0,
+    "exposure": -0.55,
+    "world_strength": 0.018,
+    "key": {
+      "location": [2.6, -2.7, 3.2],
+      "energy": 560.0,
+      "size": 2.2,
+      "color": [1.0, 0.38, 0.14]
+    },
+    "fill": {
+      "location": [-2.0, 0.8, 1.8],
+      "energy": 36.0,
+      "size": 4.5,
+      "color": [0.12, 0.26, 0.72]
+    }
+  },
+  "cartwheel_asset": {
+    "asset_id": "asset_KA1ttncbe1YAWKX38Voc6NPx",
+    "filename": "cartwheel-rigged.glb"
+  },
+  "characters": [
+    {
+      "name": "BEEF",
+      "asset_id": "asset_NfXdYKZDG2nA72pr9Cy2bhYP",
+      "model_filename": "court-beef-rigged-fresh-v2.glb",
+      "facing_degrees": 0.0,
+      "scene_offset": [0.0, 0.0, 0.0],
+      "contact": "feet",
+      "front_foot": "R",
+      "hips_angle_degrees": 15.0,
+      "pose_intent": "quiet block: lowered chin, eyes up under the brow, weight back, front foot half a step forward, idle hanging arms",
+      "pose_limitations": [
+        "The rig has no finger bones, so loosely closed hands are preserved as attached mesh units."
+      ],
+      "pose": {
+        "Root": [0.0, 0.0, 15.0],
+        "L_Clavicle": [2.0, 0.0, -3.0],
+        "R_Clavicle": [2.0, 0.0, 3.0],
+        "L_Upperarm": [35.0, 0.0, -8.0],
+        "R_Upperarm": [35.0, 0.0, 8.0],
+        "L_UpperarmTwist01": [0.0, 1.0, 0.0],
+        "L_UpperarmTwist02": [0.0, 1.0, 0.0],
+        "R_UpperarmTwist01": [0.0, -1.0, 0.0],
+        "R_UpperarmTwist02": [0.0, -1.0, 0.0],
+        "L_Forearm": [-8.0, 0.0, -4.0],
+        "R_Forearm": [-8.0, 0.0, 4.0],
+        "L_ForearmTwist01": [0.0, -1.0, 0.0],
+        "L_ForearmTwist02": [0.0, -1.0, 0.0],
+        "R_ForearmTwist01": [0.0, 1.0, 0.0],
+        "R_ForearmTwist02": [0.0, 1.0, 0.0],
+        "L_Hand": [0.0, 0.0, -2.0],
+        "R_Hand": [0.0, 0.0, 2.0],
+        "L_Thigh": [0.0, -7.0, 6.0],
+        "R_Thigh": [0.0, 3.0, -3.0],
+        "L_Calf": [2.0, 0.0, -2.0],
+        "R_Calf": [0.0, 0.0, 2.0],
+        "Head": [12.0, 0.0, 0.0]
+      }
+    },
+    {
+      "name": "CHILL",
+      "asset_id": "asset_CPsATAYkY8hgWA3WTmAegGLM",
+      "model_filename": "court-chill-rigged-fresh-v2.glb",
+      "facing_degrees": 0.0,
+      "scene_offset": [0.0, 0.0, 0.0],
+      "contact": "feet",
+      "pose_intent": "unhurried: dropped shoulders, relaxed head tilt, natural hanging arms, and a soft one-hip settle",
+      "pose_limitations": [
+        "The rig has no finger bones, so the relaxed hands remain attached mesh units."
+      ],
+      "variants": [
+        {
+          "id": "wall-lean",
+          "role": "wall-lean",
+          "label": "Shoulder lean with raised sole",
+          "shoulder_drop_degrees": 12.0,
+          "head_tilt_degrees": 3.0,
+          "pose_intent": "one shoulder and a raised sole find the restored rear wall while both arms hang idle",
+          "pose": {
+            "Waist": [4.0, 0.0, 0.0],
+            "Spine01": [5.0, 0.0, 0.0],
+            "Spine02": [4.0, 0.0, 0.0],
+            "Head": [0.0, 0.0, 3.0],
+            "L_Clavicle": [7.0, 0.0, -4.0],
+            "R_Clavicle": [5.0, 0.0, 5.0],
+            "L_Upperarm": [36.0, 0.0, -10.0],
+            "R_Upperarm": [32.0, 0.0, 8.0],
+            "L_Forearm": [-10.0, 0.0, -5.0],
+            "R_Forearm": [-9.0, 0.0, 5.0],
+            "L_Thigh": [-28.0, -8.0, 28.0],
+            "L_ThighTwist01": [0.0, -4.0, 0.0],
+            "L_ThighTwist02": [0.0, -4.0, 0.0],
+            "L_Calf": [-58.0, 0.0, 8.0],
+            "L_CalfTwist01": [0.0, -1.0, 0.0],
+            "L_CalfTwist02": [0.0, -1.0, 0.0],
+            "L_Foot": [5.0, 4.0, -78.0],
+            "R_Thigh": [-2.0, 3.0, -6.0],
+            "R_Calf": [2.0, 1.0, 3.0]
+          }
+        },
+        {
+          "id": "free-standing",
+          "role": "free-standing",
+          "label": "Free-standing relaxed fallback",
+          "shoulder_drop_degrees": 10.0,
+          "head_tilt_degrees": 3.0,
+          "pose_intent": "unhurried free-standing fallback with no contact and both feet down",
+          "pose": {
+            "Waist": [2.0, 0.0, 0.0],
+            "Spine01": [2.0, 0.0, 0.0],
+            "Spine02": [2.0, 0.0, 0.0],
+            "Head": [0.0, 0.0, 3.0],
+            "L_Clavicle": [7.0, 0.0, -4.0],
+            "R_Clavicle": [4.0, 0.0, 5.0],
+            "L_Upperarm": [36.0, 0.0, -10.0],
+            "R_Upperarm": [32.0, 0.0, 8.0],
+            "L_Forearm": [-10.0, 0.0, -5.0],
+            "R_Forearm": [-9.0, 0.0, 5.0],
+            "L_Thigh": [-6.0, -4.0, 14.0],
+            "L_Calf": [2.0, 0.0, -5.0],
+            "R_Thigh": [4.0, 3.0, -8.0],
+            "R_Calf": [1.0, 1.0, 4.0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "RICO",
+      "asset_id": "asset_QGySRdEDAsjc2f9K5QVxqWnp",
+      "model_filename": "court-rico-rigged-fresh-v2.glb",
+      "facing_degrees": 45.0,
+      "scene_offset": [0.0, 0.0, 0.0],
+      "contact": "feet",
+      "dribble_hand": "R_Hand",
+      "aim_target": [0.95, 0.55, 1.75],
+      "ball_offset": [0.03, -0.03, 0.0],
+      "head_pitch_degrees": -6.0,
+      "pose_intent": "already playing: three-quarter turn toward the hoop target, ball held at the hip, head up, knees soft",
+      "pose_limitations": [
+        "The rig has no finger bones, so the hand wrapped around the ball remains a relaxed attached mesh unit."
+      ],
+      "pose": {
+        "L_Clavicle": [5.0, 0.0, 5.0],
+        "R_Clavicle": [20.0, 0.0, -18.0],
+        "R_Upperarm": [30.0, 4.0, 20.0],
+        "R_Forearm": [38.0, 0.0, 15.0],
+        "R_Hand": [0.0, 0.0, 0.0],
+        "L_Upperarm": [18.0, 0.0, -10.0],
+        "L_Forearm": [15.0, 0.0, 5.0],
+        "L_Thigh": [0.0, 0.0, 8.0],
+        "L_Calf": [0.0, 0.0, -8.0],
+        "R_Thigh": [0.0, 0.0, -7.0],
+        "R_Calf": [0.0, 0.0, 7.0],
+        "Head": [-6.0, 0.0, 6.0]
+      }
+    },
+    {
+      "name": "BUZZ",
+      "asset_id": "asset_rDVRbFrRWDzyRq97v3vnFR7K",
+      "model_filename": "court-buzz-rigged-fresh-v2.glb",
+      "facing_degrees": 28.0,
+      "scene_offset": [0.0, -0.45, 0.0],
+      "contact": "feet",
+      "body_angle_degrees": 28.0,
+      "head_turn_degrees": 22.0,
+      "pose_intent": "wants in: well forward in the court, body angled in, weight on the balls of the feet, looking back over one shoulder",
+      "pose_limitations": [
+        "The rig has no finger bones, so the idle hands remain attached mesh units."
+      ],
+      "pose": {
+        "Root": [0.0, 0.0, 22.0],
+        "Spine01": [-4.0, 8.0, 0.0],
+        "Spine02": [-4.0, 8.0, 0.0],
+        "L_Upperarm": [22.0, 0.0, -8.0],
+        "R_Upperarm": [26.0, 0.0, 8.0],
+        "L_Forearm": [-8.0, 0.0, -4.0],
+        "R_Forearm": [-8.0, 0.0, 4.0],
+        "L_Hand": [0.0, 0.0, -2.0],
+        "R_Hand": [0.0, 0.0, 2.0],
+        "L_Thigh": [0.0, -4.0, 10.0],
+        "L_Calf": [10.0, 0.0, -4.0],
+        "R_Thigh": [0.0, 3.0, -8.0],
+        "R_Calf": [8.0, 0.0, 4.0],
+        "Head": [0.0, 0.0, -22.0]
+      }
+    }
+  ]
+}
