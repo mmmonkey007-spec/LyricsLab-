@@ -1,0 +1,1 @@
+Remedy chosen: add buffer as an explicit LyricLab dependency and reinstall workspace packages so Metro can resolve the react-native-svg buffer shim.
