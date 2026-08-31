@@ -1,0 +1,55 @@
+CHILL armature and direct-pose probe
+Model: /home/runner/workspace/tools/character-renderer/models/chill-rigged-probe.glb
+
+Armature found: yes
+Armature object count: 1
+Bone count: 41
+Bones:
+[Armature: Armature]
+Root
+Hip
+Pelvis
+L_Thigh
+L_Calf
+L_Foot
+L_ToeBase
+L_CalfTwist01
+L_CalfTwist02
+L_ThighTwist01
+L_ThighTwist02
+R_Thigh
+R_ThighTwist01
+R_ThighTwist02
+R_Calf
+R_Foot
+R_ToeBase
+R_CalfTwist01
+R_CalfTwist02
+Waist
+Spine01
+Spine02
+NeckTwist01
+NeckTwist02
+Head
+L_Clavicle
+L_Upperarm
+L_Forearm
+L_ForearmTwist01
+L_ForearmTwist02
+L_Hand
+L_UpperarmTwist01
+L_UpperarmTwist02
+R_Clavicle
+R_Upperarm
+R_UpperarmTwist01
+R_UpperarmTwist02
+R_Forearm
+R_ForearmTwist01
+R_ForearmTwist02
+R_Hand
+
+Pose attempt:
+Armature selected: Armature
+Bone selected: L_Upperarm
+Rotation: local Y increased by 65 degrees.
+Result: success — posed render was produced.
