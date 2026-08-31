@@ -1,0 +1,1 @@
+Run 5: cheaper measured judging, character mode navigation, and Android icon-font loading.
