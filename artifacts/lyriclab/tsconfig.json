@@ -5,8 +5,21 @@
     "tsBuildInfoFile": ".tsbuildinfo",
     "baseUrl": ".",
     "strict": true,
-    "paths": { "@/*": [ "./*" ] }
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    }
   },
-  "include": [ "**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts" ],
-  "references": [ { "path": "../../lib/api-client-react" } ]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ],
+  "references": [
+    {
+      "path": "../../lib/api-client-react"
+    }
+  ]
 }
