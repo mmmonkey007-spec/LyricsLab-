@@ -1,0 +1,66 @@
+Court integration summary
+=========================
+
+Status
+------
+The Court screen is integrated into LyricLab and uses the court artwork bundled
+locally in the Expo app. No runtime HTTP(S) request is made by the Court screen.
+
+Files created
+-------------
+- artifacts/lyriclab/app/(tabs)/court.tsx
+- artifacts/lyriclab/assets/court/court-with-cast.png
+- artifacts/lyriclab/assets/court/DOWNLOAD-OK.txt
+- artifacts/lyriclab/assets/court/COURT-INTEGRATION-SUMMARY.txt
+
+Files changed
+-------------
+- artifacts/lyriclab/app/(tabs)/_layout.tsx
+  Added Home and Court tabs with native-tab and classic-tab fallbacks.
+- artifacts/lyriclab/app/main.tsx
+  The existing Enter the Court action now opens the Court route.
+- artifacts/lyriclab/constants/colors.ts
+  Added the sampled dark-corner court backdrop color.
+
+Artwork
+--------
+- File: court-with-cast.png
+- Dimensions: 1024x1536
+- Format: PNG, RGB, non-interlaced
+- Saved size: 1,638,990 bytes
+- Display: centered, width-scaled, 2:3 aspect ratio, with dark-corner
+  letterboxing on screens taller than the artwork.
+
+Interaction
+-----------
+- Fractional hit regions are layered in the requested order:
+  RICO, CHILL, BUZZ, BEEF.
+- Regions overlap intentionally, with later regions receiving the top stacking
+  order.
+- BUZZ has approximately 10pt hitSlop on all sides.
+- Tapping a character gives press feedback, light haptics, and a short
+  acknowledgement showing that character's name.
+- The developer-only HIT BOXES toggle is off by default.
+
+Verification
+------------
+- TypeScript: PASS
+  Command: pnpm --filter @workspace/lyriclab run typecheck
+- Offline source audit: PASS
+  court.tsx contains no http:// or https:// strings.
+- Expo workflow: RUNNING
+  Metro started successfully and the preview server is available.
+- Artwork inspection: PASS
+  The bundled image is present and visually readable at the required size.
+
+Limitations and source note
+---------------------------
+- The supplied CDN URL could not be downloaded because it returned HTTP 403;
+  its signed policy contains a malformed AWS:EpockTime field.
+- The same Scenario asset was retrieved through the authenticated
+  asset-ID path, then normalized from 832x1248 to the required 1024x1536
+  bundle dimensions.
+- The live browser preview currently stops at LyricLab's existing sign-in
+  gate, so an unauthenticated preview session could not tap-test the Court
+  regions or visually open the Court tab. The route, tab registration, local
+  asset reference, and typecheck were verified in the project.
