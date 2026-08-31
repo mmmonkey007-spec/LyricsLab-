@@ -1,0 +1,36 @@
+GitHub workspace import summary
+
+Repository: https://github.com/mmmonkey007-spec/LyricsLab-
+Branch: workspace-import
+Pushed commit SHA: ba213d00c9cab03c47636dc120584ae9492256da
+Files carried: approximately 325 files (the branch also retains the repository's existing main-branch files).
+
+Binary assets under artifacts/lyriclab/assets included: YES.
+All 40 tracked files under artifacts/lyriclab/assets are present on the branch, including all 28 binary character-art, artwork, and audio files.
+
+Excluded files:
+- artifacts/lyriclab/server/templates/landing-page.html — GitHub's connector edge filter rejected the exact HTML payload.
+- artifacts/mockup-sandbox/index.html — GitHub's connector edge filter rejected the exact HTML payload.
+- tools/character-renderer/models/buzz-apose.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/buzz-idle-animated.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/buzz-jump.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/buzz-still-inspection.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/buzz.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/cartwheel-rigged.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/chill-animated-inspection.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/chill-apose.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/chill-idle-animated.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/chill-rigged-probe.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/chill-still-inspection.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-beef-rigged-fresh-v2.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-beef-rigged-fresh.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-buzz-rigged-fresh-v2.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-buzz-rigged-fresh.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-chill-rigged-fresh-v2.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-chill-rigged-fresh.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-rico-rigged-fresh-v2.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/court-rico-rigged-fresh.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/unmapped-buzz-fresh-probe.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+- tools/character-renderer/models/unmapped-chill-fresh-probe.glb — exceeds the safe 50 MB GitHub REST upload threshold; Git LFS is not configured.
+
+The existing main branch was not modified or force-pushed.
