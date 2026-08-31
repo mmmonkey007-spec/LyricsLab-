@@ -1,0 +1,77 @@
+uploads = []
+
+[[generated]]
+id = "ksYUdRrCCt7NLzC8U2wL1"
+uri = "file://artifacts/lyriclab/assets/images/icon.png"
+type = "image"
+title = "lyriclab app icon"
+
+[[outputs]]
+id = "uXH06txts3QNeH0eMXT3V"
+uri = "file://tools/character-renderer/renders/buzz/front.png"
+type = "image"
+title = "Buzz — Front"
+description = "1024×1536 transparent PNG rendered from the cached GLB."
+
+[[outputs]]
+id = "LLzEK_2zeScarDAWYIhud"
+uri = "file://tools/character-renderer/renders/buzz/three-quarter.png"
+type = "image"
+title = "Buzz — Three-quarter"
+description = "1024×1536 transparent PNG with consistent framing and lighting."
+
+[[outputs]]
+id = "bXzLWmay-hTt1f45hgZ5X"
+uri = "file://tools/character-renderer/renders/buzz/side.png"
+type = "image"
+title = "Buzz — Side"
+description = "1024×1536 transparent profile render."
+
+[[outputs]]
+id = "2gNGBsNyAYxEbdFteMCOA"
+uri = "file://tools/character-renderer/renders/buzz/back.png"
+type = "image"
+title = "Buzz — Back"
+description = "1024×1536 transparent rear render."
+
+[[outputs]]
+id = "GPk59c8ZtKvRsu3uydIJo"
+uri = "file://tools/character-renderer/renders/buzz/dialogue-bust.png"
+type = "image"
+title = "Buzz — Dialogue Bust"
+description = "400×600 transparent head-and-shoulders portrait rendered with the same lighting and background treatment as the turntable views."
+
+[[outputs]]
+id = "pbLiuuos-2hUT4kjxkbOH"
+uri = "file://tools/character-renderer/renders/buzz/animation-first-frame-001.png"
+type = "image"
+title = "Buzz Idle — Frame 1"
+description = "First frame of the 369-frame idle animation, rendered front-on at 1024×1536."
+
+[[outputs]]
+id = "JmnDb2m-MhuVTSrLaVWZ9"
+uri = "file://tools/character-renderer/renders/buzz/animation-middle-frame-185.png"
+type = "image"
+title = "Buzz Idle — Frame 185 (Widest Sample)"
+description = "Middle and widest of the three evenly spaced samples; use this as the primary jacket-deformation check."
+
+[[outputs]]
+id = "G_gcVHHKQ6rREERugIwDk"
+uri = "file://tools/character-renderer/renders/buzz/animation-last-frame-369.png"
+type = "image"
+title = "Buzz Idle — Frame 369"
+description = "Last frame of the idle animation, rendered with the same camera, lighting, framing, and transparent background."
+
+[[outputs]]
+id = "QnA19AROVcAw318sdTqBG"
+uri = "file://tools/character-renderer/probe/all-crops.b64.txt"
+type = "text"
+title = "Combined character crop base64 inspection"
+description = "15 validated image blocks: 13 full-resolution inspection crops plus 2 probe renders downscaled to 427x640, with SHA-256 headers and a byte-count summary."
+
+[[outputs]]
+id = "6HidWqPq14Qv5WJbtyQ1W"
+uri = "file://tools/character-renderer/probe/asset-manifest.txt"
+type = "text"
+title = "Scenario character render asset manifest"
+description = "15 verified Scenario asset IDs with renderer-relative PNG paths and exact pixel dimensions."
