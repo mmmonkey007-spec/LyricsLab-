@@ -1,0 +1,225 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: botBattles
+    description: Tiered bot battle operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /bot-battles:
+    post:
+      operationId: startBotBattle
+      tags: [botBattles]
+      summary: Start a bot battle
+      description: Assigns one active topical word and creates a judged battle session against Beef.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartBotBattleInput"
+      responses:
+        "201":
+          description: Battle started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotBattleSession"
+        "503":
+          description: No active topical words are available
+  /bot-battles/{battleId}/verse:
+    put:
+      operationId: submitBotBattleVerse
+      tags: [botBattles]
+      summary: Record the player's verse and return Beef's response
+      parameters:
+        - $ref: "#/components/parameters/BotBattleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BotBattleVerseInput"
+      responses:
+        "200":
+          description: Verse recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotBattleSession"
+        "400":
+          description: Invalid verse or battle state
+        "404":
+          description: Battle not found
+  /bot-battles/{battleId}/end:
+    post:
+      operationId: endBotBattle
+      tags: [botBattles]
+      summary: Complete and judge a bot battle
+      parameters:
+        - $ref: "#/components/parameters/BotBattleId"
+      responses:
+        "200":
+          description: Battle completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotBattleSession"
+        "400":
+          description: Battle cannot be ended yet
+        "404":
+          description: Battle not found
+components:
+  parameters:
+    BotBattleId:
+      name: battleId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    BotBattleVerseInput:
+      type: object
+      required: [verse]
+      properties:
+        verse:
+          type: string
+          minLength: 1
+          maxLength: 5000
+    StartBotBattleInput:
+      type: object
+      properties:
+        tier:
+          type: string
+          enum: [bronze, silver, gold, master]
+    BotBattleSession:
+      type: object
+      required:
+        - id
+        - topicalWord
+        - tier
+        - botName
+        - playerVerse
+        - botResponse
+        - status
+        - createdAt
+        - endedAt
+        - result
+      properties:
+        id:
+          type: integer
+        topicalWord:
+          type: string
+        tier:
+          type: string
+          enum: [bronze, silver, gold, master]
+        botName:
+          type: string
+        playerVerse:
+          type: [string, "null"]
+        botResponse:
+          type: [string, "null"]
+        status:
+          type: string
+          enum: [started, verse_submitted, completed]
+        createdAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: [string, "null"]
+          format: date-time
+        result:
+          type: [object, "null"]
+          $ref: "#/components/schemas/BotBattleResult"
+    BotBattleResult:
+      type: object
+      required:
+        - winner
+        - playerRelativeScore
+        - opponentRelativeScore
+        - playerDimensionScores
+        - opponentDimensionScores
+        - playerLineBreakdown
+        - opponentLineBreakdown
+        - verdict
+      properties:
+        winner:
+          type: string
+          enum: [player, opponent]
+        playerRelativeScore:
+          type: number
+        opponentRelativeScore:
+          type: number
+        playerDimensionScores:
+          $ref: "#/components/schemas/BotBattleDimensionScores"
+        opponentDimensionScores:
+          $ref: "#/components/schemas/BotBattleDimensionScores"
+        playerLineBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/BotBattleLineBreakdown"
+        opponentLineBreakdown:
+          type: array
+          items:
+            $ref: "#/components/schemas/BotBattleLineBreakdown"
+        verdict:
+          type: string
+    BotBattleDimensionScores:
+      type: object
+      required: [rhymeScore, flowScore, wordplayScore, originalityScore, techniqueScore, humorScore]
+      properties:
+        rhymeScore:
+          type: number
+        flowScore:
+          type: number
+        wordplayScore:
+          type: number
+        originalityScore:
+          type: number
+        techniqueScore:
+          type: number
+        humorScore:
+          type: number
+    BotBattleLineBreakdown:
+      type: object
+      required: [lineNumber, lineScore, techniques, isCritical]
+      properties:
+        lineNumber:
+          type: integer
+        lineScore:
+          type: number
+        techniques:
+          type: array
+          items:
+            type: string
+        isCritical:
+          type: boolean
+
