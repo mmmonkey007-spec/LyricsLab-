@@ -1,0 +1,70 @@
+LyricLab Android bundle fix — Run 2
+===================================
+
+Remedy
+-------
+Completed the explicit dependency remedy: `buffer@^6.0.3` is declared in
+artifacts/lyriclab/package.json and is installed through the pnpm workspace.
+LyricLab now has a resolvable node_modules/buffer link pointing to buffer 6.0.3,
+so Metro can resolve the shim required by react-native-svg 15.12.1.
+
+Actual Android bundle verification
+----------------------------------
+- Started/restarted the managed Expo dev server for LyricLab.
+- Requested the Android entry bundle from the exact pnpm Expo Router entry path
+  served by Metro, using `platform=android`.
+- Result: PASS
+- HTTP status: 200
+- Bundle size: 12,832,987 bytes
+- Metro log: Android Bundled in 21,578 ms (1,916 modules)
+- No `UnableToResolveError`, `Unable to resolve module`, or `buffer could not
+  be found` markers were present in the response.
+
+Artwork
+--------
+- Source asset ID: asset_UHK89ji2frfBznmBF1gUUu3V
+- Retrieved through the authenticated Scenario asset-ID metadata path.
+- Replaced the upscaled bundle without resizing.
+- File: artifacts/lyriclab/assets/court/court-with-cast.png
+- Final dimensions: 832x1248
+- Final byte size: 1,333,090 bytes
+- DOWNLOAD-OK.txt updated to: `1333090 bytes; 832x1248`
+
+Typecheck
+---------
+- Command: `cd artifacts/lyriclab && pnpm exec tsc -p tsconfig.json --noEmit`
+- Result: PASS
+
+Protected files
+---------------
+The following files were verified unchanged:
+- artifacts/lyriclab/app/(tabs)/court.tsx
+- artifacts/lyriclab/app/(tabs)/_layout.tsx
+- artifacts/lyriclab/constants/colors.ts
+
+Did the failure predate the Court screen?
+------------------------------------------
+Yes. Repository history shows the dependency update before the Court screen:
+- The latest relevant dependency update was committed on 2026-08-29.
+- The Court screen was added later on 2026-08-31.
+- The Court commit changed the screen, tab layout, main navigation, and colors,
+  but did not add `buffer` or change react-native-svg.
+
+Files changed or completed for this run
+---------------------------------------
+- artifacts/lyriclab/package.json — contains the explicit buffer dependency
+  added by the interrupted run.
+- pnpm-lock.yaml and workspace links — installation completed for LyricLab.
+- artifacts/lyriclab/assets/court/court-with-cast.png — replaced with the native
+  832x1248 Scenario asset.
+- artifacts/lyriclab/assets/court/DOWNLOAD-OK.txt — updated native dimensions
+  and byte size.
+- artifacts/lyriclab/assets/court/RUN2-STARTED.txt — run marker.
+- artifacts/lyriclab/assets/court/RUN2-SUMMARY.txt — this verification record.
+
+Anything not completed
+----------------------
+Nothing blocking the requested deliverable. An initial manual bundle probe
+used an incomplete workspace-root entry URL and returned a Metro 404; the
+correct Metro-served pnpm entry URL was then requested successfully and is the
+Android bundle result recorded above.
