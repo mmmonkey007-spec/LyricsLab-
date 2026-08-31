@@ -1,0 +1,49 @@
+LyricLab Court acknowledgement fix — Run 3
+===========================================
+
+Changed file
+------------
+Only artifacts/lyriclab/app/(tabs)/court.tsx was changed for the layout fix.
+
+Exact changes:
+- Line 15: imported `useBottomTabBarHeight` from
+  `@react-navigation/bottom-tabs`.
+- Line 104: added
+  `const tabBarHeight = useBottomTabBarHeight();`.
+- Line 146: removed the safe-area-only `bottomInset` calculation.
+- Line 173: changed the overlay bottom position from
+  `bottom: bottomInset + 12` to `bottom: tabBarHeight + 12`.
+
+This makes the acknowledgement card sit above the navigator-reported tab bar
+height with the existing 12pt gap while preserving its horizontal centering.
+
+Typecheck
+---------
+- Command: `cd artifacts/lyriclab && pnpm exec tsc -p tsconfig.json --noEmit`
+- Result: PASS
+
+Actual Android Metro bundle
+---------------------------
+- Expo dev server was running and restarted after the dependency import was
+  added.
+- Requested Metro's actual Android entry bundle from the pnpm-resolved Expo
+  Router entry URL.
+- Result: PASS
+- HTTP status: 200
+- Bundle size: 12,833,139 bytes
+- No `UnableToResolveError`, `Unable to resolve module`, `buffer could not be
+  found`, or Metro error markers were present.
+- Expo workflow log also reported Android Bundled successfully.
+
+Hit-region protection
+---------------------
+- `HIT_REGIONS` values and order were not touched.
+- BUZZ's `hitSlop={region.name === "BUZZ" ? 10 : undefined}` was not touched.
+- Marker-based byte comparison against the pre-change file passed for both the
+  complete HIT_REGIONS block and the BUZZ hitSlop line.
+- `artifacts/lyriclab/app/(tabs)/_layout.tsx` was unchanged.
+- `artifacts/lyriclab/constants/colors.ts` was unchanged.
+
+Run marker
+----------
+- Created artifacts/lyriclab/assets/court/RUN3-STARTED.txt.
