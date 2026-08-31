@@ -1,0 +1,37 @@
+Character renderer diagnostic job manifest
+Scenario operations: asset metadata/downloads plus rendered-image uploads; no generation calls.
+
+Models directory contents after fresh downloads:
+- tools/character-renderer/models/buzz-apose.glb (92826652 bytes)
+- tools/character-renderer/models/buzz-idle-animated.glb (97111672 bytes)
+- tools/character-renderer/models/buzz-jump.glb (97109196 bytes)
+- tools/character-renderer/models/buzz-still-inspection.glb (92826652 bytes)
+- tools/character-renderer/models/buzz.glb (62564612 bytes)
+- tools/character-renderer/models/chill-animated-inspection.glb (98969672 bytes)
+- tools/character-renderer/models/chill-apose.glb (94196132 bytes)
+- tools/character-renderer/models/chill-idle-animated.glb (98969672 bytes)
+- tools/character-renderer/models/chill-rigged-probe.glb (98320280 bytes)
+- tools/character-renderer/models/chill-still-inspection.glb (94196132 bytes)
+
+Probe outputs:
+- tools/character-renderer/probe/armature-report.txt
+- tools/character-renderer/probe/posed-test-control.png
+- tools/character-renderer/probe/posed-test.png
+
+Inspection crop outputs:
+- tools/character-renderer/renders/inspection/buzz-still-a-pose/full-face.png
+- tools/character-renderer/renders/inspection/buzz-still-a-pose/full-hands.png
+- tools/character-renderer/renders/inspection/buzz-still-a-pose/full-legs.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-001-legs.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-093-legs.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-185-face.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-185-hands.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-185-legs.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-277-legs.png
+- tools/character-renderer/renders/inspection/chill-animated-idle/frame-369-legs.png
+- tools/character-renderer/renders/inspection/chill-still-a-pose/full-face.png
+- tools/character-renderer/renders/inspection/chill-still-a-pose/full-hands.png
+- tools/character-renderer/renders/inspection/chill-still-a-pose/full-legs.png
+
+Scenario upload results:
+- tools/character-renderer/probe/asset-manifest.txt
