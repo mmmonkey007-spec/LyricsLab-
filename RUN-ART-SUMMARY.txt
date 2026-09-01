@@ -1,0 +1,20 @@
+Scenario UI art fetch summary
+
+Elapsed wall-clock time from RUN-ART-STARTED.txt to the moment the last file was saved: 58.80 minutes
+
+- artifacts/lyriclab/assets/images/ui/rank-tiers-sheet.png
+  Asset ID: asset_bBGBWCf5JNz4twxDSEWyKbbt
+  Size: 923901 bytes
+  Pixel dimensions: 2048x640
+
+- artifacts/lyriclab/assets/images/ui/class-marks-sheet.png
+  Asset ID: asset_e9q5u5G9kLtuTEyESVvJaQK2
+  Size: 642055 bytes
+  Pixel dimensions: 1920x640
+
+- artifacts/lyriclab/assets/images/ui/streak-flame-sheet.png
+  Asset ID: asset_qDHyUgvvrMgEzyq1v5hNaxqj
+  Size: 660580 bytes
+  Pixel dimensions: 1920x640
+
+All three files begin with the PNG signature and were saved without resizing, cropping, recompression, or splitting.
