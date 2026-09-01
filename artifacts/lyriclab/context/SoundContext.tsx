@@ -68,8 +68,8 @@ const BG_TRACKS: Record<BgMode, [number, number]> = {
     require("../assets/sounds/intro-loop_1783057363927.mp3") as number,
   ],
   calm: [
-    require("../assets/sounds/menu_calm_stars.wav")     as number,
-    require("../assets/sounds/menu_calm_dreamer.wav")   as number,
+    require("../assets/sounds/menu_calm_stars.m4a")     as number,
+    require("../assets/sounds/menu_calm_dreamer.m4a")   as number,
   ],
   battle: [
     require("../assets/sounds/battle_punchy_blunt.wav") as number,
