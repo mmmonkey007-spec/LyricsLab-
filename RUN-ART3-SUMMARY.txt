@@ -1,0 +1,5 @@
+ART3 SCENARIO ASSET SUMMARY
+
+mode-icons-sheet.png: 875553 bytes (2368x448)
+reward-marks-sheet.png: 558133 bytes (2048x384)
+currency-marks-sheet.png: 538015 bytes (1920x384)
