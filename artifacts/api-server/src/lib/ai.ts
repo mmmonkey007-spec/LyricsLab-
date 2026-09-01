@@ -98,6 +98,52 @@ const TIER_SPECS: Record<BattleTier, { min: number; max: number; desc: string }>
   },
 };
 
+// USD per 1M tokens, Anthropic first-party rates. Cache reads are ~0.1x base
+// input and 5-minute ephemeral cache writes ~1.25x base input, which is the
+// TTL callClaude uses via cache_control: { type: "ephemeral" }.
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  "claude-opus-5": { input: 5, output: 25 },
+  "claude-sonnet-5": { input: 2, output: 10 },
+  "claude-sonnet-4-6": { input: 3, output: 15 },
+  "claude-haiku-4-5": { input: 1, output: 5 },
+};
+const CACHE_READ_MULTIPLIER = 0.1;
+const CACHE_WRITE_MULTIPLIER = 1.25;
+
+export interface CallCost {
+  model: string;
+  usd: number;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens: number;
+  cacheWriteTokens: number;
+}
+
+/** Returns null when the model has no price on file, so an unknown model is
+ *  reported as unpriced rather than silently costed at zero. */
+function priceCall(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  cacheReadTokens: number,
+  cacheWriteTokens: number,
+): CallCost | null {
+  const rate = MODEL_PRICING[model];
+  if (!rate) return null;
+  const usd =
+    (inputTokens * rate.input +
+      outputTokens * rate.output +
+      cacheReadTokens * rate.input * CACHE_READ_MULTIPLIER +
+      cacheWriteTokens * rate.input * CACHE_WRITE_MULTIPLIER) /
+    1_000_000;
+  return { model, usd, inputTokens, outputTokens, cacheReadTokens, cacheWriteTokens };
+}
+
+/** Sums a set of calls into one figure — a battle is two calls. */
+export function totalUsd(costs: Array<CallCost | null>): number {
+  return costs.reduce((sum, c) => sum + (c?.usd ?? 0), 0);
+}
+
 function anthropicClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
@@ -112,6 +158,7 @@ async function callClaude(
   userMessage: string,
   maxTokens: number,
   cacheSystemPrompt: boolean,
+  sink?: Array<CallCost | null>,
 ): Promise<string> {
   const response = await anthropicClient().messages.create({
     model,
@@ -127,10 +174,15 @@ async function callClaude(
   });
 
   const usage = response.usage;
+  const cacheRead = usage.cache_read_input_tokens ?? 0;
+  const cacheWrite = usage.cache_creation_input_tokens ?? 0;
+  const cost = priceCall(model, usage.input_tokens, usage.output_tokens, cacheRead, cacheWrite);
+  if (sink) sink.push(cost);
   console.log(
     `[LyricLab AI] model=${model} input_tokens=${usage.input_tokens} output_tokens=${usage.output_tokens} ` +
-      `cache_read_input_tokens=${usage.cache_read_input_tokens ?? 0} ` +
-      `cache_creation_input_tokens=${usage.cache_creation_input_tokens ?? 0}`,
+      `cache_read_input_tokens=${cacheRead} ` +
+      `cache_creation_input_tokens=${cacheWrite} ` +
+      `usd=${cost ? cost.usd.toFixed(6) : "unpriced"}`,
   );
 
   const text = response.content.find((block) => block.type === "text")?.text?.trim() ?? "";
@@ -211,6 +263,7 @@ export async function generateOpponentVerseWithClaude(
   word1: string,
   word2: string,
   difficulty: BattleTier,
+  sink?: Array<CallCost | null>,
 ): Promise<string> {
   const tier = TIER_SPECS[difficulty] ?? TIER_SPECS.bronze;
   const lineConstraint =
@@ -224,12 +277,13 @@ ${lineConstraint}
 ${tier.desc}
 
 Return ONLY the raw verse lines — no title, explanation, labels, or quotes.`;
-  return callClaude(OPPONENT_MODEL, null, prompt, 600, false);
+  return callClaude(OPPONENT_MODEL, null, prompt, 600, false, sink);
 }
 
 export async function judgeBattleWithClaude(
   playerLyrics: string,
   opponentLyrics: string,
+  sink?: Array<CallCost | null>,
 ): Promise<BattleScoreResult> {
   const rawText = await callClaude(
     JUDGE_MODEL,
@@ -241,6 +295,7 @@ OPPONENT VERSE:
 ${opponentLyrics}`,
     3000,
     true,
+    sink,
   );
   return parseBattleScore(rawText);
 }

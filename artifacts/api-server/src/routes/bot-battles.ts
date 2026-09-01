@@ -4,6 +4,8 @@ import { db, botBattleSessionsTable, topicalWordsTable } from "@workspace/db";
 import {
   generateOpponentVerseWithClaude,
   judgeBattleWithClaude,
+  totalUsd,
+  type CallCost,
   type BattleScoreResult,
   type BattleTier,
 } from "../lib/ai";
@@ -124,8 +126,20 @@ router.put("/bot-battles/:battleId/verse", async (req, res): Promise<void> => {
   }
 
   let botResponse: string;
+  const opponentCost: Array<CallCost | null> = [];
   try {
-    botResponse = await generateOpponentVerseWithClaude(battle.topical_word, "bars", battle.tier as BattleTier);
+    botResponse = await generateOpponentVerseWithClaude(
+      battle.topical_word,
+      "bars",
+      battle.tier as BattleTier,
+      opponentCost,
+    );
+    // Half of the per-battle AI cost. The judge logs the other half against the
+    // same battleId, so a battle total is the sum of its two COST lines.
+    req.log.info(
+      { battleId, phase: "opponent", usd: totalUsd(opponentCost), calls: opponentCost },
+      "AI cost",
+    );
   } catch (error) {
     req.log.error({ error, battleId }, "Unable to generate opponent verse");
     res.status(503).json({ error: error instanceof Error ? error.message : "Opponent service unavailable." });
@@ -174,8 +188,13 @@ router.post("/bot-battles/:battleId/end", async (req, res): Promise<void> => {
   }
 
   let result: Awaited<ReturnType<typeof judgeBattleWithClaude>>;
+  const judgeCost: Array<CallCost | null> = [];
   try {
-    result = await judgeBattleWithClaude(battle.player_verse, battle.bot_response);
+    result = await judgeBattleWithClaude(battle.player_verse, battle.bot_response, judgeCost);
+    req.log.info(
+      { battleId, phase: "judge", usd: totalUsd(judgeCost), calls: judgeCost },
+      "AI cost",
+    );
   } catch (error) {
     req.log.error({ error, battleId }, "Unable to judge completed battle");
     res.status(503).json({ error: error instanceof Error ? error.message : "Battle judge unavailable." });
