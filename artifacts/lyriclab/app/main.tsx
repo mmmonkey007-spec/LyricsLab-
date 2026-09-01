@@ -104,7 +104,7 @@ export default function MainScreen() {
           accessibilityRole="button"
           accessibilityLabel="Enter the Court"
           activeOpacity={0.82}
-          onPress={() => router.push("/(tabs)/court" as never)}
+          onPress={() => router.push("/(tabs)" as never)}
           style={[styles.courtButton, { backgroundColor: colors.accent }]}
         >
           <Text style={[styles.courtButtonText, { color: colors.background }]}>Enter the Court</Text>

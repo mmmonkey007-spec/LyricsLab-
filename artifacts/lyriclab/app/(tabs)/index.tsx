@@ -1,294 +1,323 @@
 import * as Haptics from "expo-haptics";
-import { router, useFocusEffect } from "expo-router";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useRef, useState } from "react";
 import {
-  Alert,
+  Animated,
+  Image,
   Platform,
+  Pressable,
   StatusBar,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useStartBotBattle } from "@workspace/api-client-react";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
-import { BoomboxIcon } from "@/components/BoomboxIcon";
-import { CourtCharacters } from "@/components/CourtCharacters";
-import { DevPanel } from "@/components/DevPanel";
-import { InlineIcon } from "@/components/InlineIcon";
-import { useAuth } from "@/context/AuthContext";
-import { useGame } from "@/context/GameContext";
-import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
-import { getPrompt } from "@/services/api";
-import { useSound } from "@/context/SoundContext";
 
-export default function CourtScreen() {
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const { energy, maxEnergy, nextRegenMs, getPersonalBest, getAverageScore } = useGame();
-  const { currentQuest, chosenClass, isOnboarding } = useOnboarding();
-  const { user, username, isGuest, signOut } = useAuth();
-  const startBotBattleMutation = useStartBotBattle();
-  const { playScratch, playBgMusic, stopBgMusicFade } = useSound();
-  const [loadingMode, setLoadingMode] = useState<"prompted" | "blitz" | "battle" | null>(null);
-  const [devPanelVisible, setDevPanelVisible] = useState(false);
+const COURT_ART = require("../../assets/court/court-with-cast.png");
 
-  const personalBest = getPersonalBest();
-  const averageScore = getAverageScore();
-  const regenTargetRef = useRef<number>(0);
-  const [timerDisplay, setTimerDisplay] = useState("");
+type CharacterName = "RICO" | "CHILL" | "BUZZ" | "BEEF";
 
-  useFocusEffect(
-    useCallback(() => {
-      playBgMusic(900);
-      return () => { stopBgMusicFade(400); };
-    }, [playBgMusic, stopBgMusicFade]),
-  );
+type HitRegion = {
+  name: CharacterName;
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+  testID: string;
+};
+
+// Regions intentionally overlap. Later entries render above earlier entries.
+const HIT_REGIONS: HitRegion[] = [
+  { name: "RICO", x0: 0.27, x1: 0.69, y0: 0.34, y1: 0.66, testID: "court-hit-rico" },
+  { name: "CHILL", x0: 0.03, x1: 0.20, y0: 0.33, y1: 0.74, testID: "court-hit-chill" },
+  { name: "BUZZ", x0: 0.15, x1: 0.37, y0: 0.50, y1: 0.79, testID: "court-hit-buzz" },
+  { name: "BEEF", x0: 0.58, x1: 0.95, y0: 0.35, y1: 0.96, testID: "court-hit-beef" },
+];
+
+const DARK_CORNER_BACKDROP = "#160F19";
+
+function CharacterHitRegion({
+  region,
+  debug,
+  active,
+  onPressIn,
+  onPressOut,
+  onPress,
+}: {
+  region: HitRegion;
+  debug: boolean;
+  active: boolean;
+  onPressIn: () => void;
+  onPressOut: () => void;
+  onPress: () => void;
+}) {
+  const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (energy >= maxEnergy || nextRegenMs <= 0) {
-      regenTargetRef.current = 0;
-      setTimerDisplay("");
-      return;
-    }
-    regenTargetRef.current = Date.now() + nextRegenMs;
-  }, [energy, maxEnergy, nextRegenMs]);
-
-  useEffect(() => {
-    if (energy >= maxEnergy) {
-      setTimerDisplay("");
-      return;
-    }
-    const tick = () => {
-      const msLeft = Math.max(0, regenTargetRef.current - Date.now());
-      const totalSecs = Math.ceil(msLeft / 1000);
-      if (totalSecs <= 0) {
-        setTimerDisplay("");
-        return;
-      }
-      const minutes = Math.floor(totalSecs / 60).toString().padStart(2, "0");
-      const seconds = (totalSecs % 60).toString().padStart(2, "0");
-      setTimerDisplay(`next in ${minutes}:${seconds}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [energy, maxEnergy]);
-
-  const handleFreeWrite = async () => {
-    playScratch();
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push({ pathname: "/write", params: { mode: "free" } });
-  };
-
-  const handlePrompted = async () => {
-    setLoadingMode("prompted");
-    playScratch();
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      const prompt = await getPrompt();
-      router.push({ pathname: "/write", params: { mode: "prompted", prompt } });
-    } catch {
-      router.push({ pathname: "/write", params: { mode: "prompted", prompt: "Write about a moment that changed everything" } });
-    } finally {
-      setLoadingMode(null);
-    }
-  };
-
-  const handleBlitz = async () => {
-    setLoadingMode("blitz");
-    playScratch();
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    try {
-      const prompt = await getPrompt();
-      router.push({ pathname: "/write", params: { mode: "blitz", prompt } });
-    } catch {
-      router.push({ pathname: "/write", params: { mode: "blitz" } });
-    } finally {
-      setLoadingMode(null);
-    }
-  };
-
-  const handleBattle = async () => {
-    setLoadingMode("battle");
-    playScratch();
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    try {
-      const battle = await startBotBattleMutation.mutateAsync();
-      router.push({
-        pathname: "/write",
-        params: {
-          mode: "battle",
-          battleId: String(battle.id),
-          topicalWord: battle.topicalWord,
-          botName: battle.botName,
-        },
-      });
-    } catch {
-      Alert.alert("Battle unavailable", "We couldn't assign a topical word right now. Please try again.");
-    } finally {
-      setLoadingMode(null);
-    }
-  };
-
-  const topPad = Platform.OS === "web" ? 67 : insets.top;
-  const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
+    Animated.spring(scale, {
+      toValue: active ? 0.965 : 1,
+      useNativeDriver: Platform.OS !== "web",
+      speed: 26,
+      bounciness: 5,
+    }).start();
+  }, [active, scale]);
 
   return (
-    <View
+    <Pressable
+      testID={region.testID}
+      accessibilityRole="button"
+      accessibilityLabel={`Tap ${region.name}`}
+      onPressIn={onPressIn}
+      onPressOut={onPressOut}
+      onPress={onPress}
+      hitSlop={region.name === "BUZZ" ? 10 : undefined}
       style={[
-        styles.container,
+        styles.hitRegion,
         {
-          backgroundColor: colors.background,
-          paddingTop: topPad + 10,
-          paddingBottom: bottomPad + 10,
+          left: `${region.x0 * 100}%`,
+          top: `${region.y0 * 100}%`,
+          width: `${(region.x1 - region.x0) * 100}%`,
+          height: `${(region.y1 - region.y0) * 100}%`,
         },
       ]}
     >
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.hitFeedback,
+          { transform: [{ scale }] },
+          debug && styles.debugRegion,
+          debug && { borderColor: region.name === "BEEF" ? "#FF4D6D" : "#F5C518" },
+        ]}
+      />
+    </Pressable>
+  );
+}
+
+export default function CourtHomeScreen() {
+  const colors = useColors();
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
+  const [debugRegions, setDebugRegions] = useState(false);
+  const [activeCharacter, setActiveCharacter] = useState<CharacterName | null>(null);
+  const [acknowledgedCharacter, setAcknowledgedCharacter] = useState<CharacterName | null>(null);
+  const acknowledgementTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const navigationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const imageWidth = width;
+  const imageHeight = imageWidth * (3 / 2);
+  const stageHeight = Math.max(height, imageHeight);
+
+  useEffect(() => {
+    return () => {
+      if (acknowledgementTimer.current) {
+        clearTimeout(acknowledgementTimer.current);
+      }
+      if (navigationTimer.current) {
+        clearTimeout(navigationTimer.current);
+      }
+    };
+  }, []);
+
+  const showCharacter = (name: CharacterName) => {
+    setAcknowledgedCharacter(name);
+    if (acknowledgementTimer.current) {
+      clearTimeout(acknowledgementTimer.current);
+    }
+    acknowledgementTimer.current = setTimeout(() => {
+      setAcknowledgedCharacter(null);
+    }, 1200);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (navigationTimer.current) {
+      clearTimeout(navigationTimer.current);
+    }
+    navigationTimer.current = setTimeout(() => {
+      const mode = {
+        BEEF: "battle",
+        BUZZ: "blitz",
+        CHILL: "free",
+        RICO: "prompted",
+      }[name];
+      router.push({ pathname: "/write", params: { mode } });
+    }, 180);
+  };
+
+  const handleRicoPress = () => showCharacter("RICO");
+  const handleChillPress = () => showCharacter("CHILL");
+  const handleBuzzPress = () => showCharacter("BUZZ");
+  const handleBeefPress = () => showCharacter("BEEF");
+
+  const handlers: Record<CharacterName, () => void> = {
+    RICO: handleRicoPress,
+    CHILL: handleChillPress,
+    BUZZ: handleBuzzPress,
+    BEEF: handleBeefPress,
+  };
+
+  const topInset = Platform.OS === "web" ? 67 : insets.top;
+
+  return (
+    <View style={[styles.screen, { backgroundColor: colors.courtBackdrop || DARK_CORNER_BACKDROP }]}>
       <StatusBar barStyle="light-content" />
+      <View style={[styles.stage, { minHeight: stageHeight }]}>
+        <View style={[styles.courtFrame, { width: imageWidth, height: imageHeight }]}>
+          <Image
+            source={COURT_ART}
+            accessibilityLabel="Night basketball court with BEEF, BUZZ, CHILL and RICO"
+            resizeMode="stretch"
+            style={styles.courtImage}
+          />
 
-      <View style={styles.header}>
-        <TouchableOpacity
-          onLongPress={__DEV__ ? () => setDevPanelVisible(true) : undefined}
-          delayLongPress={800}
-          activeOpacity={1}
-        >
-          <Text style={[styles.logoText, { color: colors.accent }]}>LYRICLAB</Text>
-        </TouchableOpacity>
-
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            accessibilityLabel="Audio settings"
-            onPress={() => router.push("/audio-settings" as never)}
-            style={[styles.iconBtn, { backgroundColor: colors.card }]}
-          >
-            <BoomboxIcon size={24} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityLabel="Leaderboard"
-            onPress={() => router.push("/leaderboard")}
-            style={[styles.iconBtn, { backgroundColor: colors.card }]}
-          >
-            <InlineIcon name="award" size={19} color={colors.accent} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityLabel={isGuest ? "Sign in" : "Account"}
-            onPress={() => {
-              if (isGuest) {
-                router.push("/auth" as never);
-                return;
-              }
-              Alert.alert(
-                username ?? "Account",
-                user?.email ?? "",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  { text: "Sign Out", style: "destructive", onPress: () => signOut() },
-                ],
-              );
-            }}
-            style={[styles.iconBtn, { backgroundColor: colors.card }]}
-          >
-            <InlineIcon name={isGuest ? "log-in" : "user"} size={19} color={isGuest ? colors.textMuted : colors.cyan} />
-          </TouchableOpacity>
+          {HIT_REGIONS.map((region) => (
+            <CharacterHitRegion
+              key={region.name}
+              region={region}
+              debug={debugRegions}
+              active={activeCharacter === region.name}
+              onPressIn={() => setActiveCharacter(region.name)}
+              onPressOut={() => setActiveCharacter(null)}
+              onPress={handlers[region.name]}
+            />
+          ))}
         </View>
       </View>
 
-      <CourtCharacters
-        loadingMode={loadingMode}
-        onFreestyle={handleFreeWrite}
-        onPrompted={handlePrompted}
-        onBlitz={handleBlitz}
-        onBattle={handleBattle}
-      />
+      <View pointerEvents="box-none" style={[styles.overlay, { top: topInset + 12, bottom: tabBarHeight + 12 }]}>
+        <View style={styles.overlayTopRow}>
+          <View style={styles.titlePill}>
+            <Text style={[styles.eyebrow, { color: colors.accent }]}>THE COURT</Text>
+            <Text style={[styles.subtitle, { color: colors.text }]}>Choose your cast</Text>
+          </View>
 
-      <View style={[styles.statsRow, { backgroundColor: colors.surface }]}>
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.accent }]}>
-            {personalBest > 0 ? personalBest.toLocaleString() : "—"}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Best Score</Text>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.cyan }]}>
-            {averageScore > 0 ? averageScore.toLocaleString() : "—"}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Average</Text>
-        </View>
-        <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-        <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: energy > 0 ? colors.violet : colors.red }]}>
-            {energy}/{maxEnergy}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Energy</Text>
-          {energy < maxEnergy && timerDisplay ? (
-            <Text style={[styles.regenTimer, { color: colors.textMuted }]}>{timerDisplay}</Text>
+          {__DEV__ ? (
+            <Pressable
+              testID="court-debug-toggle"
+              accessibilityRole="switch"
+              accessibilityLabel="Toggle Court tap regions"
+              accessibilityState={{ checked: debugRegions }}
+              onPress={() => setDebugRegions((current) => !current)}
+              style={[
+                styles.debugToggle,
+                {
+                  backgroundColor: debugRegions ? colors.accent : colors.surface,
+                  borderColor: debugRegions ? colors.accent : colors.border,
+                },
+              ]}
+            >
+              <Text style={[styles.debugToggleText, { color: debugRegions ? colors.primaryForeground : colors.textMuted }]}>
+                HIT BOXES
+              </Text>
+            </Pressable>
           ) : null}
         </View>
-      </View>
 
-      {__DEV__ && <DevPanel visible={devPanelVisible} onClose={() => setDevPanelVisible(false)} />}
+        {acknowledgedCharacter ? (
+          <View accessibilityLiveRegion="polite" style={[styles.acknowledgement, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
+            <Text style={[styles.acknowledgementLabel, { color: colors.textMuted }]}>YOU HIT</Text>
+            <Text style={[styles.acknowledgementName, { color: colors.accent }]}>{acknowledgedCharacter}</Text>
+          </View>
+        ) : null}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+    overflow: "hidden",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-  },
-  logoText: {
-    fontSize: 22,
-    fontWeight: "800",
-    letterSpacing: 3,
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 7,
-  },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+  stage: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-  statsRow: {
-    flexDirection: "row",
-    borderRadius: 14,
-    padding: 12,
-    marginHorizontal: 20,
+  courtFrame: {
+    position: "relative",
+    maxWidth: "100%",
   },
-  statItem: {
+  courtImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: "100%",
+    height: "100%",
+  },
+  hitRegion: {
+    position: "absolute",
+    zIndex: 2,
+  },
+  hitFeedback: {
     flex: 1,
-    alignItems: "center",
+    margin: 2,
+    borderRadius: 18,
+    backgroundColor: "rgba(245, 197, 24, 0.12)",
+    opacity: 0,
   },
-  statValue: {
-    fontSize: 19,
-    fontWeight: "700",
-    fontVariant: ["tabular-nums"],
+  debugRegion: {
+    opacity: 1,
+    backgroundColor: "rgba(245, 197, 24, 0.14)",
+    borderWidth: 2,
   },
-  statLabel: {
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+  },
+  overlayTopRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  titlePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 14,
+    backgroundColor: "rgba(10, 10, 15, 0.74)",
+  },
+  eyebrow: {
     fontSize: 10,
-    marginTop: 3,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    fontWeight: "800",
+    letterSpacing: 1.6,
   },
-  regenTimer: {
-    fontSize: 8,
+  subtitle: {
     marginTop: 2,
-    fontVariant: ["tabular-nums"],
+    fontSize: 14,
+    fontWeight: "700",
   },
-  statDivider: {
-    width: 1,
-    marginHorizontal: 6,
+  debugToggle: {
+    paddingHorizontal: 10,
+    paddingVertical: 9,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  debugToggleText: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+  },
+  acknowledgement: {
+    alignSelf: "center",
+    minWidth: 120,
+    alignItems: "center",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  acknowledgementLabel: {
+    fontSize: 9,
+    fontWeight: "800",
+    letterSpacing: 1.2,
+  },
+  acknowledgementName: {
+    marginTop: 2,
+    fontSize: 19,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
 });

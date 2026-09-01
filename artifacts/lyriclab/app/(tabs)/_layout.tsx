@@ -8,16 +8,24 @@ import { BlurView } from "expo-blur";
 
 import { useColors } from "@/hooks/useColors";
 
+/**
+ * Ruled 2026-08-31: the court IS the way in. `index` is the court, each
+ * character opens the mode he represents, and class / rank / streak / trend
+ * live on their own Profile tab with the class icon beside the portrait.
+ *
+ * The screen that used to sit here is now `app/home.tsx` — a launch screen
+ * whose only action was to reach a second screen is not a tab.
+ */
 function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="court">
         <Icon sf={{ default: "basketball", selected: "basketball.fill" }} />
         <Label>Court</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person", selected: "person.fill" }} />
+        <Label>Profile</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -58,15 +66,15 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => <Feather name="home" size={21} color={color} />,
+          title: "Court",
+          tabBarIcon: ({ color }) => <Feather name="target" size={21} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="court"
+        name="profile"
         options={{
-          title: "Court",
-          tabBarIcon: ({ color }) => <Feather name="target" size={21} color={color} />,
+          title: "Profile",
+          tabBarIcon: ({ color }) => <Feather name="user" size={21} color={color} />,
         }}
       />
     </Tabs>
