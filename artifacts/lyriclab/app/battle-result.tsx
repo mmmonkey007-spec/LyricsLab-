@@ -306,12 +306,25 @@ function VerseVisualizer({
 export default function BattleResultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { currentSession, resetCurrentSession, addEnergy } = useGame();
+  const { currentSession, saveSession, resetCurrentSession, addEnergy } = useGame();
   const { currentQuest, isOnboarding, mainQuest, completeQuest, completeMainQuest, rewardQueue, shiftRewardQueue } = useOnboarding();
   const { playSuccess, playMiss } = useSound();
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [questTriggered, setQuestTriggered] = useState(false);
   const [mainQuestTriggered, setMainQuestTriggered] = useState(false);
+  const [savedSession, setSavedSession] = useState(false);
+
+  // ── The battle is written down ────────────────────────────────────────────
+  // Ruled MYTHIC: every battle stores its verse with its tier and its topical
+  // word. This screen displayed the finished battle and never saved it, so the
+  // ladder (which replays rank from stored battles), the improvement trend and
+  // the verse bank were all reading an empty store. result.tsx has always done
+  // this for free, prompted and blitz; battle is the mode that was missed.
+  useEffect(() => {
+    if (!currentSession || currentSession.mode !== "battle" || savedSession) return;
+    setSavedSession(true);
+    saveSession(currentSession);
+  }, [currentSession, savedSession, saveSession]);
 
   useEffect(() => {
     if (!currentSession || questTriggered || !isOnboarding || currentQuest !== 4) return;
