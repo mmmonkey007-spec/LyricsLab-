@@ -306,12 +306,20 @@ function VerseVisualizer({
 export default function BattleResultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { currentSession, resetCurrentSession, addEnergy } = useGame();
+  const { currentSession, saveSession, resetCurrentSession, addEnergy } = useGame();
   const { currentQuest, isOnboarding, mainQuest, completeQuest, completeMainQuest, rewardQueue, shiftRewardQueue } = useOnboarding();
   const { playSuccess, playMiss } = useSound();
+  const [savedSession, setSavedSession] = useState(false);
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [questTriggered, setQuestTriggered] = useState(false);
   const [mainQuestTriggered, setMainQuestTriggered] = useState(false);
+
+  useEffect(() => {
+    if (currentSession && currentSession.mode === "battle" && !savedSession) {
+      setSavedSession(true);
+      saveSession(currentSession);
+    }
+  }, [currentSession, savedSession, saveSession]);
 
   useEffect(() => {
     if (!currentSession || questTriggered || !isOnboarding || currentQuest !== 4) return;

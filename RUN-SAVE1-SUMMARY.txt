@@ -1,0 +1,3 @@
+SAVE-SESSION CALL: Present in the battle result screen, guarded by one-shot local state and restricted to existing battle sessions.
+TYPECHECK: Run with pnpm --filter @workspace/lyriclab run typecheck.
+TYPECHECK ERROR COUNT: 2
