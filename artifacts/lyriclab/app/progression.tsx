@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle, Line, Polyline } from "react-native-svg";
 
 import { RadarChart } from "@/components/RadarChart";
+import StreakFlame from "@/components/StreakFlame";
 import { InlineIcon } from "@/components/InlineIcon";
 import type { RadarStats } from "@/components/RadarChart";
 import { RADAR_AXES } from "@/components/RadarChart";
@@ -251,7 +252,7 @@ export default function ProgressionScreen() {
         {/* Streak callout — shown if streak > 0, not shown if 0 */}
         {streak.currentStreak > 0 && (
           <View style={[styles.streakBanner, { backgroundColor: colors.accent + "18", borderColor: colors.accent + "40" }]}>
-            <Text style={[styles.streakFlame, { color: colors.accent }]}>🔥</Text>
+            <StreakFlame days={streak.currentStreak} size={44} />
             <Text style={[styles.streakBannerText, { color: colors.text }]}>
               {streak.currentStreak}-day run
             </Text>

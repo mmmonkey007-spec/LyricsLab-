@@ -45,7 +45,11 @@ export interface BattleScoreResult {
 }
 
 const JUDGE_MODEL = "claude-sonnet-5";
-const OPPONENT_MODEL = "claude-sonnet-4-6";
+// Sonnet 5 is both newer and cheaper than Sonnet 4.6 ($2/$10 per 1M against
+// $3/$15), so this is a strict improvement rather than a quality trade.
+// Haiku 4.5 is cheaper still ($1/$5) but would be a quality gamble on the
+// verse the player actually reads.
+const OPPONENT_MODEL = "claude-sonnet-5";
 
 const SCORE_SYSTEM_PROMPT = `You are a hip-hop and poetry craft judge. Analyze the submitted lyrics and return ONLY a JSON object — no markdown, no explanation, no backticks.
 

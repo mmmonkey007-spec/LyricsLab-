@@ -16,6 +16,7 @@ import { useGame } from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 import { InlineIcon } from "@/components/InlineIcon";
+import StreakFlame from "@/components/StreakFlame";
 
 const CLASS_ART = {
   assassin: require("../assets/characters/assassin.png"),
@@ -93,7 +94,7 @@ export default function MainScreen() {
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>ENERGY</Text>
           </View>
           <View style={[styles.stat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={styles.flame}>🔥</Text>
+            <StreakFlame days={streak.currentStreak} size={30} />
             <Text style={[styles.statValue, { color: colors.text }]}>{streak.currentStreak}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>STREAK</Text>
           </View>
