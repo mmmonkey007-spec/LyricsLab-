@@ -1,0 +1,7 @@
+ELAPSED: 0 minutes 21.922 seconds
+AGENT MODE: MODE UNKNOWN — this runtime does not expose the selected Free/Power/Max model tier to the agent.
+
+FILES:
+artifacts/lyriclab/assets/images/ui/timing-a.png: 923901 bytes
+artifacts/lyriclab/assets/images/ui/timing-b.png: 642055 bytes
+artifacts/lyriclab/assets/images/ui/timing-c.png: 660580 bytes
