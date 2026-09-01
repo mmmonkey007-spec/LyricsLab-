@@ -156,6 +156,15 @@ export default function ClassIntroScreen() {
     });
   }, [forced]);
 
+  useEffect(() => {
+    // There is no class to introduce, so the render below returns null. Without
+    // this the player sits on a permanently blank screen with no way out; send
+    // them to the screen that actually sets a class instead.
+    if (!displayClass) {
+      router.replace("/class-selection");
+    }
+  }, [displayClass]);
+
   if (!ready || !displayClass) return null;
 
   const intro = INTROS[displayClass];
