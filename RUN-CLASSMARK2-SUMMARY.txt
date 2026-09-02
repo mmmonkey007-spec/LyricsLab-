@@ -1,0 +1,17 @@
+CLASSMARK2 is complete within the 20-minute deadline.
+
+Changed only artifacts/lyriclab/components/ClassMark.tsx:
+- Reduced the crop window from 480 to 360 sheet pixels.
+- Replaced guessed centers with measured ink centers:
+  Assassin [408, 318], Rider [957, 319], Trickster [1506, 321].
+- Documented the measured ink extents and the warning against returning to
+  even-division arithmetic.
+- Preserved the component props, fallback behavior, and both screen call sites.
+
+Verification:
+- Typecheck reports exactly the two pre-existing mutateAsync errors in
+  app/home.tsx and app/write.tsx.
+- Expo web export completed successfully with exit code 0.
+- Geometry checks show each measured center within 0.5px and every mark fits
+  inside the 360px crop.
+- Expo workflow restarted successfully after the change.

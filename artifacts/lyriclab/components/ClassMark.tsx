@@ -6,13 +6,19 @@ import type { PlayerClass } from "@/context/OnboardingContext";
 const SHEET = require("@/assets/images/ui/class-marks-sheet.png");
 const SHEET_W = 1920;
 const SHEET_H = 640;
-const CELL_SIZE = 480;
+const CELL_SIZE = 360;
 
-// The locked sheet has three marks centered in the three 640px columns.
+/**
+ * These centers are measured off the ink on the locked sheet, not inferred
+ * from even column division. Ink extents are Assassin x309–508/y160–476,
+ * Rider x822–1093/y180–458, and Trickster x1374–1638/y196–447. This sheet
+ * has now been cropped by assumption twice, so keep these hard-coded
+ * measurements and do not simplify them back into even-division arithmetic.
+ */
 const MARK_CENTERS: Partial<Record<PlayerClass, [number, number]>> = {
-  assassin: [480, 320],
-  rider: [960, 320],
-  trickster: [1440, 320],
+  assassin: [408, 318],
+  rider: [957, 319],
+  trickster: [1506, 321],
 };
 
 export interface ClassMarkProps {
