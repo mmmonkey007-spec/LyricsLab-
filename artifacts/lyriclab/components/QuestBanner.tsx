@@ -52,7 +52,7 @@ const ONBOARDING_QUEST_COPY: Record<
 const MAIN_QUEST_NAV: Record<number, () => void> = {
   1: () => router.push({ pathname: "/write", params: { mode: "free" } }),
   2: () =>
-    router.push({ pathname: "/write", params: { mode: "free", isWeaknessCoach: "true" } }),
+    router.push({ pathname: "/write", params: { mode: "drill" } }),
   3: () =>
     router.push({
       pathname: "/write",

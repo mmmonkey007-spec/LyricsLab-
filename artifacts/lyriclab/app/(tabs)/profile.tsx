@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/context/AuthContext";
-import { useGame } from "@/context/GameContext";
+import { isCompetitionSession, useGame } from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 import { CLASS_META } from "@/services/classMeta";
@@ -42,7 +42,7 @@ export default function ProfileScreen() {
   // of what was actually played. The curve lives in services/ladder.ts.
   const { ladder, rankWinRate, battlesAtRank } = useMemo(() => {
     const battles = sessions
-      .filter((s) => s.mode === "battle" && s.battleWinner)
+      .filter((s) => isCompetitionSession(s) && s.mode === "battle" && s.battleWinner)
       .sort((a, b) => a.timestamp - b.timestamp);
     const results = battles.map((s) => s.battleWinner === "player");
     const state = ladderFromResults(results);
@@ -75,11 +75,11 @@ export default function ProfileScreen() {
   // intact count on the exact day it dies.
   const playedToday = useMemo(() => {
     const today = toDateStr(Date.now());
-    return sessions.some((s) => toDateStr(s.timestamp) === today);
+    return sessions.some((s) => isCompetitionSession(s) && toDateStr(s.timestamp) === today);
   }, [sessions]);
   const playedYesterday = useMemo(() => {
     const yday = toDateStr(Date.now() - DAY_MS);
-    return sessions.some((s) => toDateStr(s.timestamp) === yday);
+    return sessions.some((s) => isCompetitionSession(s) && toDateStr(s.timestamp) === yday);
   }, [sessions]);
   const streakAtRisk = streak.currentStreak > 0 && !playedToday && playedYesterday;
 

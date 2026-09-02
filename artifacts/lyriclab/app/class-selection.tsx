@@ -162,7 +162,7 @@ export default function ClassSelectionScreen() {
             {[
               { icon: "edit-3", text: "Score freestyle, prompted, blitz, and battle sessions" },
               { icon: "trending-up", text: "Track your progress on the leaderboard" },
-              { icon: "shield", text: "Use OG to drill your weak spots — always free" },
+              { icon: "shield", text: "Use OG to drill your weak spots — 1 energy" },
             ].map((item, i) => (
               <View key={i} style={styles.nextStepRow}>
                 <View style={[styles.nextStepIcon, { backgroundColor: cls.accentColor + "22" }]}>

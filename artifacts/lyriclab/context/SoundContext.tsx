@@ -99,7 +99,7 @@ interface SoundContextValue {
   setMusicMuted:     (muted: boolean) => void;
   /** Fade background music in for the given mode. Defaults to "intro".
    *  If the same mode is already audible (volume > 0) the call is a no-op
-   *  so calm music continues seamlessly across home → Freestyle/Prompted/Blitz. */
+   *  so calm music continues seamlessly across home → Drill/Freestyle/Prompted/Blitz. */
   playBgMusic:     (fadeInMs?: number, mode?: BgMode) => void;
   stopBgMusicFade: (durationMs?: number) => void;
 }

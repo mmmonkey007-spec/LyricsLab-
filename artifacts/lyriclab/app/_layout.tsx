@@ -18,7 +18,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { InlineIcon } from "@/components/InlineIcon";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
-import { GameProvider, useGame } from "@/context/GameContext";
+import { GameProvider, isCompetitionSession, useGame } from "@/context/GameContext";
 import { OnboardingProvider, useOnboarding } from "@/context/OnboardingContext";
 import { SoundProvider } from "@/context/SoundContext";
 import { syncCurrencies, syncLeaderboard, syncSession } from "@/services/supabaseSync";
@@ -39,16 +39,16 @@ function SupabaseSyncBridge() {
   useEffect(() => {
     if (!user || sessions.length === 0) return;
     const latest = sessions[0];
-    if (!latest || latest.id === lastSyncedId.current || latest.isWeaknessCoach) return;
+    if (!latest || latest.id === lastSyncedId.current || !isCompetitionSession(latest)) return;
     lastSyncedId.current = latest.id;
 
-    const nonCoach = sessions.filter((s) => !s.isWeaknessCoach);
-    const bestScore = nonCoach.length ? Math.max(...nonCoach.map((s) => s.finalScore)) : 0;
+    const competitionSessions = sessions.filter(isCompetitionSession);
+    const bestScore = competitionSessions.length ? Math.max(...competitionSessions.map((s) => s.finalScore)) : 0;
 
     syncSession(latest, user.id).catch(() => {});
     syncLeaderboard(
       bestScore,
-      nonCoach.length,
+      competitionSessions.length,
       user.id,
       username ?? "Anonymous",
       chosenClass

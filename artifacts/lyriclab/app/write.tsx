@@ -22,7 +22,12 @@ import {
   useSubmitBotBattleVerse,
 } from "@workspace/api-client-react";
 
-import { useGame } from "@/context/GameContext";
+import {
+  DRILL_BRIEFS,
+  ENERGY_COST,
+  GENERIC_DRILL_BRIEF,
+  useGame,
+} from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useSound } from "@/context/SoundContext";
 import { InlineIcon } from "@/components/InlineIcon";
@@ -39,6 +44,7 @@ const TRAIN_AREA_LABELS: Record<string, string> = {
   wordplay:     "Wordplay",
   originality:  "Originality",
   technique:    "Technique",
+  humor:        "Humour",
 };
 
 const BLITZ_DURATION = 3 * 60; // 3 minutes in seconds
@@ -75,23 +81,29 @@ export default function WriteScreen() {
     battleId?: string;
     topicalWord?: string;
     botName?: string;
-    isWeaknessCoach?: string;
     exercise?: string;
     trainArea?: string;
   }>();
 
   const mode = params.mode ?? "free";
   const prompt = params.prompt;
-  const isWeaknessCoach = params.isWeaknessCoach === "true";
   const exercise = params.exercise;
   const trainArea = params.trainArea;
 
-  const { energy, maxEnergy, consumeEnergy, setCurrentSession, sessions } = useGame();
+  const {
+    energy,
+    maxEnergy,
+    consumeEnergy,
+    setCurrentSession,
+    getWeakestDimension,
+  } = useGame();
   const { isOnboarding, currentQuest, completeQuest } = useOnboarding();
   const { playTap, playMiss, playBgMusic, stopBgMusicFade } = useSound();
   const startBotBattleMutation = useStartBotBattle();
   const submitBotBattleVerseMutation = useSubmitBotBattleVerse();
   const endBotBattleMutation = useEndBotBattle();
+  const drillDimension = mode === "drill" ? getWeakestDimension() : null;
+  const drillBrief = exercise ?? (drillDimension ? DRILL_BRIEFS[drillDimension] : GENERIC_DRILL_BRIEF);
 
   // Background music — calm for all non-battle modes, battle for Battle Rap.
   // Same-mode continuation is handled inside playBgMusic (no restart if already
@@ -201,14 +213,14 @@ export default function WriteScreen() {
         }
       }
 
-      const energyCost = mode === "battle" ? 2 : 1;
+      const energyCost = ENERGY_COST[mode];
       if (energy < energyCost) {
         playMiss();
         Alert.alert(
           "Not enough energy",
           mode === "battle"
-            ? "Battle Rap costs 2 energy. Wait for it to recharge, or try OG — always free."
-            : "You're out of energy. It recharges over time, or tap OG — always free."
+            ? "Battle Rap costs 2 energy. Wait for it to recharge, then try again."
+            : "You're out of energy. It recharges over time, then try again."
         );
         return;
       }
@@ -339,7 +351,7 @@ export default function WriteScreen() {
             breakdown: result.breakdown,
             lineBreakdown: result.lineBreakdown,
             weaknessOptions: result.weaknessOptions,
-            isWeaknessCoach,
+            isWeaknessCoach: mode === "drill",
             timestamp: Date.now(),
           });
 
@@ -599,8 +611,13 @@ export default function WriteScreen() {
               </Text>
             )}
             {mode === "free" && (
-              <Text style={[styles.modeLabel, { color: isWeaknessCoach ? colors.violet : colors.textMuted }]}>
-                {isWeaknessCoach ? "OG" : "Freestyle"}
+              <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
+                Freestyle
+              </Text>
+            )}
+            {mode === "drill" && (
+              <Text style={[styles.modeLabel, { color: colors.violet }]}>
+                Drill
               </Text>
             )}
             {mode === "prompted" && (
@@ -641,13 +658,13 @@ export default function WriteScreen() {
         )}
 
         {/* Weakness Coach drill banner */}
-        {isWeaknessCoach && (
+        {mode === "drill" && (
           <View style={[styles.contextBanner, { backgroundColor: colors.violet + "18", borderColor: colors.violet + "55", borderWidth: 1 }]}>
             <InlineIcon name="target" size={13} color={colors.violet} />
             <Text style={[styles.contextText, { color: colors.violet }]}>
               {trainArea && TRAIN_AREA_LABELS[trainArea]
-                ? `Drilling: ${TRAIN_AREA_LABELS[trainArea]}`
-                : (exercise ?? "Open drill — write anything, OG scores it")}
+                ? `Drilling: ${TRAIN_AREA_LABELS[trainArea]} — ${drillBrief}`
+                : drillBrief}
             </Text>
           </View>
         )}
@@ -687,7 +704,7 @@ export default function WriteScreen() {
                 ? battle
                   ? `Answer the word: "${battle.topicalWord}"`
                   : "Finding your topical word..."
-                : isWeaknessCoach
+                : mode === "drill"
                   ? "Drop your bars — OG is watching..."
                   : mode === "prompted" || mode === "blitz"
                     ? "Let the prompt guide you..."

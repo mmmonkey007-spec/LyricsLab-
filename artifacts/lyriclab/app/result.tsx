@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScoreBar } from "@/components/ScoreBar";
 import { RewardPopup } from "@/components/RewardPopup";
 import { InlineIcon } from "@/components/InlineIcon";
-import { useGame } from "@/context/GameContext";
+import { isDrillSession, useGame } from "@/context/GameContext";
 import { QUEST_REWARDS, useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 
@@ -29,6 +29,7 @@ const DIMENSION_LABELS: Record<string, string> = {
   wordplay: "Wordplay",
   originality: "Originality",
   technique: "Technique",
+  humorCraft: "Humour",
 };
 
 const DIMENSION_ORDER = [
@@ -37,6 +38,7 @@ const DIMENSION_ORDER = [
   "wordplay",
   "originality",
   "technique",
+  "humorCraft",
 ] as const;
 
 const TECHNIQUE_PRIORITY = [
@@ -129,11 +131,12 @@ export default function ResultScreen() {
   // Main quest completion triggers (post-onboarding)
   useEffect(() => {
     if (!savedSession || mainQuestTriggered || !mainQuest || !currentSession) return;
-    const { finalScore, isWeaknessCoach } = currentSession;
+    const { finalScore } = currentSession;
+    const isDrill = isDrillSession(currentSession);
     let shouldComplete = false;
-    if (mainQuest === 1 && !isWeaknessCoach) shouldComplete = true;
-    else if (mainQuest === 2 && isWeaknessCoach) shouldComplete = true;
-    else if (mainQuest === 4 && !isWeaknessCoach && finalScore >= 75) shouldComplete = true;
+    if (mainQuest === 1 && !isDrill) shouldComplete = true;
+    else if (mainQuest === 2 && isDrill) shouldComplete = true;
+    else if (mainQuest === 4 && !isDrill && finalScore >= 75) shouldComplete = true;
     if (shouldComplete) {
       setMainQuestTriggered(true);
       completeMainQuest(mainQuest);
@@ -191,6 +194,7 @@ export default function ResultScreen() {
     wordplay: colors.accent,
     originality: colors.red,
     technique: "#4ADE80",
+    humorCraft: colors.violet,
   };
 
   const weakLabel = DIMENSION_LABELS[weakestDimension] ?? weakestDimension;
@@ -509,12 +513,12 @@ export default function ResultScreen() {
                     </Text>
                     <Text style={[styles.microExercise, { color: colors.text }]}>{opt.exercise}</Text>
                     <TouchableOpacity
-                      onPress={() => router.push({ pathname: "/write", params: { mode: "free", isWeaknessCoach: "true", exercise: opt.exercise } })}
+                      onPress={() => router.push({ pathname: "/write", params: { mode: "drill", exercise: opt.exercise } })}
                       style={[styles.coachBtn, { backgroundColor: colors.violet + "33", borderColor: colors.violet + "66" }]}
                     >
                       <InlineIcon name="pen-tool" size={14} color={colors.violet} />
                       <Text style={[styles.coachBtnText, { color: colors.violet }]}>
-                        Run this drill (free)
+                        Run this drill
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -526,12 +530,12 @@ export default function ResultScreen() {
                   </Text>
                   <Text style={[styles.microExercise, { color: colors.text }]}>{microExercise}</Text>
                   <TouchableOpacity
-                    onPress={() => router.push({ pathname: "/write", params: { mode: "free", isWeaknessCoach: "true", exercise: microExercise } })}
+                    onPress={() => router.push({ pathname: "/write", params: { mode: "drill", exercise: microExercise } })}
                     style={[styles.coachBtn, { backgroundColor: colors.violet + "33", borderColor: colors.violet + "66" }]}
                   >
                     <InlineIcon name="pen-tool" size={14} color={colors.violet} />
                     <Text style={[styles.coachBtnText, { color: colors.violet }]}>
-                      Run this drill (free)
+                      Run this drill
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -578,7 +582,7 @@ export default function ResultScreen() {
                 <View style={[styles.tutorialHighlight, { backgroundColor: colors.cyan + "18", borderColor: colors.cyan + "44" }]}>
                   <InlineIcon name="zap" size={13} color={colors.cyan} />
                   <Text style={[styles.tutorialHighlightText, { color: colors.cyan }]}>
-                    Always free. No energy. No limits.
+                    Costs 1 energy. Builds your next edge.
                   </Text>
                 </View>
                 <TouchableOpacity

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SessionCard } from "@/components/SessionCard";
 import { InlineIcon } from "@/components/InlineIcon";
 import { useAuth } from "@/context/AuthContext";
-import { useGame } from "@/context/GameContext";
+import { isCompetitionSession, useGame } from "@/context/GameContext";
 import { useColors } from "@/hooks/useColors";
 import type { GameSession } from "@/context/GameContext";
 import type { GlobalLeaderboardEntry } from "@/services/supabaseSync";
@@ -53,8 +53,8 @@ export default function LeaderboardScreen() {
 
   const filtered =
     filter === "all"
-      ? sessions.filter((s) => !s.isWeaknessCoach)
-      : sessions.filter((s) => s.mode === filter && !s.isWeaknessCoach);
+      ? sessions.filter(isCompetitionSession)
+      : sessions.filter((s) => s.mode === filter && isCompetitionSession(s));
 
   const sorted = [...filtered].sort((a, b) => b.finalScore - a.finalScore);
 
@@ -184,7 +184,7 @@ export default function LeaderboardScreen() {
                   { color: colors.violet, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace" },
                 ]}
               >
-                {sessions.filter((s) => !s.isWeaknessCoach).length}
+                {sessions.filter(isCompetitionSession).length}
               </Text>
               <Text style={[styles.summaryLabel, { color: colors.textMuted }]}>Sessions</Text>
             </View>

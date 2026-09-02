@@ -26,7 +26,7 @@ type CharacterName = "RICO" | "CHILL" | "BUZZ" | "BEEF";
 const CHARACTER_MODE: Record<CharacterName, GameMode> = {
   BEEF: "battle",
   BUZZ: "blitz",
-  CHILL: "free",
+  CHILL: "drill",
   RICO: "prompted",
 };
 
@@ -34,6 +34,7 @@ const MODE_LABEL: Record<GameMode, string> = {
   battle: "Rap Battle",
   blitz: "Blitz",
   free: "Freestyle",
+  drill: "Drill",
   prompted: "Prompted",
 };
 

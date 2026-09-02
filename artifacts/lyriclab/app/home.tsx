@@ -77,10 +77,10 @@ export default function HomeScreen() {
     return () => clearInterval(id);
   }, [energy, maxEnergy]);
 
-  const handleFreeWrite = async () => {
+  const handleDrill = async () => {
     playScratch();
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push({ pathname: "/write", params: { mode: "free" } });
+    router.push({ pathname: "/write", params: { mode: "drill" } });
   };
 
   const handlePrompted = async () => {
@@ -198,7 +198,7 @@ export default function HomeScreen() {
 
       <CourtCharacters
         loadingMode={loadingMode}
-        onFreestyle={handleFreeWrite}
+        onDrill={handleDrill}
         onPrompted={handlePrompted}
         onBlitz={handleBlitz}
         onBattle={handleBattle}

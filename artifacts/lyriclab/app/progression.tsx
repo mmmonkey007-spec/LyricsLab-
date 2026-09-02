@@ -18,7 +18,7 @@ import { RADAR_AXES } from "@/components/RadarChart";
 import { QuestBanner } from "@/components/QuestBanner";
 import { SessionCard } from "@/components/SessionCard";
 import type { GameSession } from "@/context/GameContext";
-import { useGame } from "@/context/GameContext";
+import { isCompetitionSession, useGame } from "@/context/GameContext";
 import { useColors } from "@/hooks/useColors";
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ export default function ProgressionScreen() {
   const [window, setWindow] = useState<DayWindow>(30);
 
   const realSessions = useMemo(
-    () => sessions.filter((s) => !s.isWeaknessCoach),
+    () => sessions.filter(isCompetitionSession),
     [sessions]
   );
 

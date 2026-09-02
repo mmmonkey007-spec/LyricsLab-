@@ -7,6 +7,7 @@ import type { InlineIconName } from "@/components/InlineIcon";
 
 const MODE_LABELS: Record<string, string> = {
   free: "Freestyle",
+  drill: "Drill",
   prompted: "Prompted",
   blitz: "3-Min Blitz",
   battle: "Battle",
@@ -14,6 +15,7 @@ const MODE_LABELS: Record<string, string> = {
 
 const MODE_ICONS: Record<string, InlineIconName> = {
   free: "edit-3",
+  drill: "target",
   prompted: "zap",
   blitz: "clock",
   battle: "crosshair",

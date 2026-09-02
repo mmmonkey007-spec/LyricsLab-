@@ -9,13 +9,14 @@ import React, {
 } from "react";
 import { AppState } from "react-native";
 
-export type GameMode = "free" | "prompted" | "blitz" | "battle";
+export type GameMode = "free" | "prompted" | "blitz" | "battle" | "drill";
 
 export const ENERGY_COST: Record<GameMode, number> = {
   free: 1,
   prompted: 1,
   blitz: 1,
   battle: 2,
+  drill: 1,
 };
 
 export interface DimensionScores {
@@ -26,6 +27,28 @@ export interface DimensionScores {
   technique: number;
   humorCraft: number;
 }
+
+export type ScoringDimension = keyof DimensionScores;
+
+export const SCORING_DIMENSIONS: readonly ScoringDimension[] = [
+  "rhymeQuality",
+  "flowRhythm",
+  "wordplay",
+  "originality",
+  "technique",
+  "humorCraft",
+];
+
+export const DRILL_BRIEFS: Record<ScoringDimension, string> = {
+  rhymeQuality: "Write four bars that land on one clean rhyme family. Change the setup each bar, then stick the landing.",
+  flowRhythm: "Write four bars with the same steady cadence. Read them aloud twice and keep the beat even from start to finish.",
+  wordplay: "Write four bars around one double meaning. Make the first read clear, then let the second meaning snap into place.",
+  originality: "Write four bars from a specific moment only you could describe. Add one unexpected image and avoid the first cliché.",
+  technique: "Write four bars using an internal rhyme and one multi-syllabic rhyme in every bar. Keep the meaning sharp.",
+  humorCraft: "Write four bars that set up and pay off one joke. Use a surprising comparison, then make the last bar the punchline.",
+};
+
+export const GENERIC_DRILL_BRIEF = "Open drill — write anything, OG scores it";
 
 export interface StreakData {
   currentStreak: number;
@@ -115,6 +138,7 @@ interface GameContextType {
   getPersonalBest: () => number;
   getAverageScore: () => number;
   getImprovementTrend: () => number;
+  getWeakestDimension: () => ScoringDimension | null;
   devSetEnergy: (n: number) => void;
   devResetGame: () => Promise<void>;
 }
@@ -126,7 +150,16 @@ const STORAGE_KEY_SESSIONS = "lyriclab_sessions";
 // ── Streak computation ─────────────────────────────────────────────────────
 // Returns currentStreak (consecutive days ending today or yesterday with a
 // real scored submission) and longestStreak (max ever).
-// We count only real sessions (not isWeaknessCoach drills).
+// Legacy sessions used isWeaknessCoach; new drills use mode === "drill".
+export function isDrillSession(session: Pick<GameSession, "mode" | "isWeaknessCoach">): boolean {
+  return session.mode === "drill" || session.isWeaknessCoach === true;
+}
+
+// Every competition-facing metric must use this predicate.
+export function isCompetitionSession(session: Pick<GameSession, "mode" | "isWeaknessCoach">): boolean {
+  return !isDrillSession(session);
+}
+
 // "Yesterday" grace: a streak that ended yesterday is still shown so a single
 // missed midnight doesn't wipe it — but it won't grow until today is played.
 function toDateStr(ts: number): string {
@@ -135,7 +168,7 @@ function toDateStr(ts: number): string {
 }
 
 function computeStreak(sessions: GameSession[]): StreakData {
-  const real = sessions.filter((s) => !s.isWeaknessCoach);
+  const real = sessions.filter(isCompetitionSession);
   if (!real.length) return { currentStreak: 0, longestStreak: 0 };
 
   const dateSet = new Set(real.map((s) => toDateStr(s.timestamp)));
@@ -310,27 +343,47 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const getPersonalBest = useCallback((): number => {
-    const nonCoach = sessions.filter((s) => !s.isWeaknessCoach);
-    if (!nonCoach.length) return 0;
-    return Math.max(...nonCoach.map((s) => s.finalScore));
+    const competitionSessions = sessions.filter(isCompetitionSession);
+    if (!competitionSessions.length) return 0;
+    return Math.max(...competitionSessions.map((s) => s.finalScore));
   }, [sessions]);
 
   const getAverageScore = useCallback((): number => {
-    const nonCoach = sessions.filter((s) => !s.isWeaknessCoach);
-    if (!nonCoach.length) return 0;
-    const sum = nonCoach.reduce((acc, s) => acc + s.finalScore, 0);
-    return Math.round(sum / nonCoach.length);
+    const competitionSessions = sessions.filter(isCompetitionSession);
+    if (!competitionSessions.length) return 0;
+    const sum = competitionSessions.reduce((acc, s) => acc + s.finalScore, 0);
+    return Math.round(sum / competitionSessions.length);
   }, [sessions]);
 
   const getImprovementTrend = useCallback((): number => {
-    const nonCoach = sessions.filter((s) => !s.isWeaknessCoach).slice(0, 10);
-    if (nonCoach.length < 2) return 0;
-    const recent = nonCoach.slice(0, 5);
-    const older = nonCoach.slice(5);
+    const competitionSessions = sessions.filter(isCompetitionSession).slice(0, 10);
+    if (competitionSessions.length < 2) return 0;
+    const recent = competitionSessions.slice(0, 5);
+    const older = competitionSessions.slice(5);
     if (!older.length) return 0;
     const recentAvg = recent.reduce((a, s) => a + s.finalScore, 0) / recent.length;
     const olderAvg = older.reduce((a, s) => a + s.finalScore, 0) / older.length;
     return Math.round(recentAvg - olderAvg);
+  }, [sessions]);
+
+  const getWeakestDimension = useCallback((): ScoringDimension | null => {
+    const competitionSessions = sessions.filter(isCompetitionSession);
+    if (!competitionSessions.length) return null;
+
+    let weakest: ScoringDimension = SCORING_DIMENSIONS[0];
+    let weakestAverage = Number.POSITIVE_INFINITY;
+    for (const dimension of SCORING_DIMENSIONS) {
+      const total = competitionSessions.reduce((sum, session) => {
+        const score = session.scores[dimension];
+        return sum + (typeof score === "number" && Number.isFinite(score) ? score : 0);
+      }, 0);
+      const average = total / competitionSessions.length;
+      if (average < weakestAverage) {
+        weakest = dimension;
+        weakestAverage = average;
+      }
+    }
+    return weakest;
   }, [sessions]);
 
   const streak = useMemo(() => computeStreak(sessions), [sessions]);
@@ -352,6 +405,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         getPersonalBest,
         getAverageScore,
         getImprovementTrend,
+        getWeakestDimension,
         devSetEnergy,
         devResetGame,
       }}

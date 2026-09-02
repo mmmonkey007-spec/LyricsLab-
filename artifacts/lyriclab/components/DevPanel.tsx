@@ -212,6 +212,7 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
         multiSyllabicBonus: 3,
       },
       timestamp: Date.now(),
+      isWeaknessCoach: simMode === "drill",
     };
 
     setCurrentSession(session);
@@ -321,7 +322,7 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
     { label: "Write / Prompted", route: "/write", params: { mode: "prompted", prompt: "Rain on rooftops" } },
     { label: "Write / Blitz", route: "/write", params: { mode: "blitz", prompt: "Time is money" } },
     { label: "Write / Battle", route: "/write", params: { mode: "battle", battleWord1: "fire", battleWord2: "ice" } },
-    { label: "Write / OG", route: "/write", params: { mode: "free", isWeaknessCoach: "true" } },
+    { label: "Write / Drill", route: "/write", params: { mode: "drill" } },
     { label: "Result", route: "/result" },
     { label: "Battle Result", route: "/battle-result" },
     { label: "🔮 Preview Shapeshifter", route: "/class-intro", params: { forced: "true", forceClass: "metamorpher" } },
@@ -331,7 +332,7 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
     ? `Post-OB · MQ${mainQuest ?? "?"}`
     : `OB Quest ${currentQuest ?? "?"}`;
 
-  const modes: GameMode[] = ["free", "prompted", "blitz", "battle"];
+  const modes: GameMode[] = ["free", "prompted", "blitz", "battle", "drill"];
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>

@@ -13,7 +13,7 @@ type LoadingMode = "prompted" | "blitz" | "battle" | null;
 
 interface CourtCharactersProps {
   loadingMode: LoadingMode;
-  onFreestyle: () => void;
+  onDrill: () => void;
   onPrompted: () => void;
   onBlitz: () => void;
   onBattle: () => void;
@@ -21,7 +21,7 @@ interface CourtCharactersProps {
 
 export function CourtCharacters({
   loadingMode,
-  onFreestyle,
+  onDrill,
   onPrompted,
   onBlitz,
   onBattle,
@@ -41,8 +41,8 @@ export function CourtCharacters({
             art={CHILL_IDLE_ART}
             accent={colors.cyan}
             name="CHILL"
-            mode="FREESTYLE"
-            onPress={onFreestyle}
+            mode="DRILL"
+            onPress={onDrill}
           />
           <CharacterArtTile
             art={PROMPTED_IDLE_ART}

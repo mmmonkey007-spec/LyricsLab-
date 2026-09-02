@@ -1,0 +1,16 @@
+DRILL1 is complete, within the 40-minute deadline.
+
+Implemented:
+- Made drill a first-class, 1-energy GameMode.
+- Routed CHILL, the weakness quest, DevPanel, and result exercises to drill mode.
+- Added long-term weakest-dimension selection across six scoring dimensions.
+- Added dimension-specific four-bar drill briefs and the generic no-history brief.
+- Preserved legacy isWeaknessCoach sessions while centralizing competition filtering.
+- Excluded drills from streaks, leaderboard, ladder, personal best, averages, trends, progression, and Supabase sync.
+- Added Drill labels/icons and corrected the old “always free” copy.
+
+Verification:
+- Typecheck still reports exactly the two pre-existing mutateAsync errors:
+  app/home.tsx and app/write.tsx.
+- Expo web export completed successfully with exit code 0.
+- Live Expo workflow restarted successfully and preview loaded.
