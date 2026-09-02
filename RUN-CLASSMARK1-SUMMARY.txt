@@ -1,0 +1,13 @@
+CLASSMARK1 is complete within the 20-minute deadline.
+
+Implemented:
+- Restored the local ClassMark crop component for the locked class-marks sheet.
+- Wired the class mark into the profile portrait fallback at portrait size.
+- Wired the class mark into the profile badge at badge size without changing its coloured backing circle.
+- Wired the class mark into the class-selection graduation/confirmation view at large size with the existing spacing.
+- Passed each class emoji into ClassMark as its fallback, including the dormant class with no sheet mark.
+
+Verification:
+- Typecheck reports exactly the two pre-existing mutateAsync errors in app/home.tsx and app/write.tsx.
+- Expo web export completed successfully with exit code 0 and bundled 68 assets.
+- Expo workflow restarted successfully; direct preview loaded to the existing sign-in gate with no class-mark runtime error.

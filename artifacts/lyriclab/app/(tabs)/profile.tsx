@@ -17,6 +17,7 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 import { CLASS_META } from "@/services/classMeta";
 import RankEmblem from "@/components/RankEmblem";
+import ClassMark from "@/components/ClassMark";
 import {
   breakEvenFor,
   formatPercent,
@@ -106,10 +107,18 @@ export default function ProfileScreen() {
             {meta?.portrait ? (
               <Image source={meta.portrait} style={styles.portrait} resizeMode="cover" />
             ) : (
-              <Text style={styles.portraitFallback}>{meta?.emoji ?? "🎤"}</Text>
+              <ClassMark
+                playerClass={chosenClass}
+                size={70}
+                fallback={meta?.emoji ?? "🎤"}
+              />
             )}
             <View style={[styles.classBadge, { backgroundColor: meta?.accentColor ?? colors.border }]}>
-              <Text style={styles.classBadgeText}>{meta?.emoji ?? "🎤"}</Text>
+              <ClassMark
+                playerClass={chosenClass}
+                size={26}
+                fallback={meta?.emoji ?? "🎤"}
+              />
             </View>
           </View>
           <View style={styles.identityText}>
@@ -221,7 +230,6 @@ const styles = StyleSheet.create({
     overflow: "visible",
   },
   portrait: { width: 70, height: 70, borderRadius: 35 },
-  portraitFallback: { fontSize: 30 },
   classBadge: {
     position: "absolute",
     right: -2,
@@ -232,7 +240,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  classBadgeText: { fontSize: 13 },
   identityText: { flex: 1, gap: 2 },
   username: { fontSize: 22, fontWeight: "700" },
   className: { fontSize: 14, fontWeight: "600" },

@@ -20,6 +20,7 @@ import { useSound } from "@/context/SoundContext";
 import { syncClass } from "@/services/supabaseSync";
 import { RadarChart, CLASS_RADAR_STATS, CLASS_RADAR_COLORS } from "@/components/RadarChart";
 import { InlineIcon, type InlineIconName } from "@/components/InlineIcon";
+import ClassMark from "@/components/ClassMark";
 
 interface ClassDef {
   id: PlayerClass;
@@ -145,7 +146,12 @@ export default function ClassSelectionScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <StatusBar barStyle="light-content" />
         <View style={[styles.graduationWrap, { paddingTop: topPad + 32, paddingBottom: bottomPad + 24 }]}>
-          <Text style={styles.graduationEmoji}>{cls.emoji}</Text>
+          <ClassMark
+            playerClass={cls.id}
+            size={96}
+            fallback={cls.emoji}
+            style={styles.graduationMark}
+          />
           <Text style={[styles.graduationClass, { color: cls.accentColor }]}>{cls.name}</Text>
           <Text style={[styles.graduationTagline, { color: colors.textMuted }]}>{cls.tagline}</Text>
 
@@ -548,8 +554,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 0,
   },
-  graduationEmoji: {
-    fontSize: 64,
+  graduationMark: {
     marginBottom: 16,
   },
   graduationClass: {
