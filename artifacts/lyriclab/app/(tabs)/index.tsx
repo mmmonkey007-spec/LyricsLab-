@@ -16,10 +16,32 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { useColors } from "@/hooks/useColors";
+import ModeIcon from "@/components/ModeIcon";
+import type { GameMode } from "@/context/GameContext";
 
 const COURT_ART = require("../../assets/court/court-with-cast.png");
 
 type CharacterName = "RICO" | "CHILL" | "BUZZ" | "BEEF";
+
+/**
+ * Which mode each character opens. Ruled 2026-08-29: the court is one picture
+ * with four tap targets, and each character "gives access to the game mode each
+ * character represents". Hoisted out of the tap handler so the acknowledgement
+ * can name the same mode the navigation is about to enter.
+ */
+const CHARACTER_MODE: Record<CharacterName, GameMode> = {
+  BEEF: "battle",
+  BUZZ: "blitz",
+  CHILL: "free",
+  RICO: "prompted",
+};
+
+const MODE_LABEL: Record<GameMode, string> = {
+  battle: "Rap Battle",
+  blitz: "Blitz",
+  free: "Freestyle",
+  prompted: "Prompted",
+};
 
 type HitRegion = {
   name: CharacterName;
@@ -138,13 +160,7 @@ export default function CourtHomeScreen() {
       clearTimeout(navigationTimer.current);
     }
     navigationTimer.current = setTimeout(() => {
-      const mode = {
-        BEEF: "battle",
-        BUZZ: "blitz",
-        CHILL: "free",
-        RICO: "prompted",
-      }[name];
-      router.push({ pathname: "/write", params: { mode } });
+      router.push({ pathname: "/write", params: { mode: CHARACTER_MODE[name] } });
     }, 180);
   };
 
@@ -219,8 +235,13 @@ export default function CourtHomeScreen() {
 
         {acknowledgedCharacter ? (
           <View accessibilityLiveRegion="polite" style={[styles.acknowledgement, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
-            <Text style={[styles.acknowledgementLabel, { color: colors.textMuted }]}>YOU HIT</Text>
-            <Text style={[styles.acknowledgementName, { color: colors.accent }]}>{acknowledgedCharacter}</Text>
+            <ModeIcon mode={CHARACTER_MODE[acknowledgedCharacter]} size={34} />
+            <View style={styles.acknowledgementCopy}>
+              <Text style={[styles.acknowledgementName, { color: colors.accent }]}>{acknowledgedCharacter}</Text>
+              <Text style={[styles.acknowledgementLabel, { color: colors.textMuted }]}>
+                {MODE_LABEL[CHARACTER_MODE[acknowledgedCharacter]]}
+              </Text>
+            </View>
           </View>
         ) : null}
       </View>
@@ -303,11 +324,17 @@ const styles = StyleSheet.create({
   acknowledgement: {
     alignSelf: "center",
     minWidth: 120,
+    flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 18,
+    gap: 10,
+    paddingLeft: 12,
+    paddingRight: 18,
     paddingVertical: 10,
     borderRadius: 16,
     borderWidth: 1,
+  },
+  acknowledgementCopy: {
+    alignItems: "flex-start",
   },
   acknowledgementLabel: {
     fontSize: 9,
