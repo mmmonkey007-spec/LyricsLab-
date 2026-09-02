@@ -1,0 +1,17 @@
+RANKCARD1 is complete within the 20-minute deadline.
+
+Updated only the rank card’s primary row on the profile screen:
+- Kept the rank emblem and rank name on the left.
+- Moved the win rate into a right-aligned anchor block.
+- Set the rate to 30px, weight 800, while preserving green/red/muted color logic.
+- Removed the “you” prefix and both middot separators.
+- Added the muted 11px “hold” break-even line beneath the rate.
+- Preserved the “—” placeholder, points bar, footer, and no-record invitation.
+- Added a comment explaining why the rate and moving tier break-even remain together.
+
+Verification:
+- Typecheck reports exactly the two pre-existing mutateAsync errors in
+  app/home.tsx and app/write.tsx.
+- Expo web export completed successfully with exit code 0.
+- Source check confirms the old rank-rate “you” prefix and separators are gone.
+- Expo workflow restarted successfully after the change.

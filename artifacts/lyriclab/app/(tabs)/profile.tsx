@@ -131,22 +131,28 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Rank — the win rate beside the break-even it must beat */}
+        {/* Rank — the win rate is the bragging-rights anchor */}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.cardLabel, { color: colors.mutedForeground }]}>RANK</Text>
-          <View style={styles.rankLine}>
-            <RankEmblem tier={ladder.tier} size={38} style={styles.rankEmblem} />
-            <Text style={[styles.rankName, { color: colors.text }]}>{formatRank(ladder)}</Text>
-            <Text style={[styles.rankSep, { color: colors.mutedForeground }]}>·</Text>
-            <Text
-              style={[styles.rankStat, { color: rankWinRate === null ? colors.mutedForeground : holding ? "#4ADE80" : "#F87171" }]}
-            >
-              you {rankWinRate === null ? "—" : formatPercent(rankWinRate)}
-            </Text>
-            <Text style={[styles.rankSep, { color: colors.mutedForeground }]}>·</Text>
-            <Text style={[styles.rankStat, { color: colors.mutedForeground }]}>
-              hold {formatPercent(breakEven, 1)}
-            </Text>
+          <View style={styles.rankLinePrimary}>
+            <View style={styles.rankIdentity}>
+              <RankEmblem tier={ladder.tier} size={38} style={styles.rankEmblem} />
+              <Text style={[styles.rankName, { color: colors.text }]}>{formatRank(ladder)}</Text>
+            </View>
+            {/* The rate is what players show off; hold makes it readable because the target moves with each tier. */}
+            <View style={styles.rankRateBlock}>
+              <Text
+                style={[
+                  styles.rankRate,
+                  { color: rankWinRate === null ? colors.mutedForeground : holding ? "#4ADE80" : "#F87171" },
+                ]}
+              >
+                {rankWinRate === null ? "—" : formatPercent(rankWinRate)}
+              </Text>
+              <Text style={[styles.rankBreakEven, { color: colors.mutedForeground }]}>
+                hold {formatPercent(breakEven, 1)}
+              </Text>
+          </View>
           </View>
 
           <View style={[styles.pointsTrack, { backgroundColor: colors.border }]}>
@@ -246,9 +252,13 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 8 },
   cardLabel: { fontSize: 11, fontWeight: "700", letterSpacing: 1.1 },
   rankLine: { flexDirection: "row", alignItems: "baseline", flexWrap: "wrap", gap: 6 },
+  rankLinePrimary: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", width: "100%" },
+  rankIdentity: { flexDirection: "row", alignItems: "center", gap: 6 },
   rankEmblem: { alignSelf: "center", marginRight: 2 },
   rankName: { fontSize: 20, fontWeight: "700" },
-  rankSep: { fontSize: 15 },
+  rankRateBlock: { alignItems: "flex-end", marginLeft: "auto" },
+  rankRate: { fontSize: 30, fontWeight: "800", lineHeight: 32 },
+  rankBreakEven: { fontSize: 11, fontWeight: "500", lineHeight: 14 },
   rankStat: { fontSize: 15, fontWeight: "600" },
   pointsTrack: { height: 6, borderRadius: 3, overflow: "hidden", marginTop: 2 },
   pointsFill: { height: 6, borderRadius: 3 },
