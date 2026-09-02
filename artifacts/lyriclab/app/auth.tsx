@@ -203,7 +203,7 @@ export default function AuthScreen() {
                 <View style={[styles.inputWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Text style={[styles.inputLabel, { color: colors.textMuted }]}>EMAIL</Text>
                   <TextInput
-                    style={[styles.input, styles.inputWithReveal, { color: colors.text }]}
+                    style={[styles.input, { color: colors.text }]}
                     value={email}
                     onChangeText={setEmail}
                     placeholder="your@email.com"
@@ -234,7 +234,7 @@ export default function AuthScreen() {
                 <View style={[styles.inputWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Text style={[styles.inputLabel, { color: colors.textMuted }]}>PASSWORD</Text>
                   <TextInput
-                    style={[styles.input, { color: colors.text }]}
+                    style={[styles.input, styles.inputWithReveal, { color: colors.text }]}
                     value={password}
                     onChangeText={setPassword}
                     placeholder="••••••••"

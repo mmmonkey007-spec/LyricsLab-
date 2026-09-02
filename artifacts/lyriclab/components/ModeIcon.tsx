@@ -3,6 +3,15 @@ import { Image, View, ViewStyle } from "react-native";
 
 import type { GameMode } from "@/context/GameContext";
 
+/**
+ * The six tiles in this sheet are not evenly divided: they are inset 110px
+ * from the left and pitched 367px apart, rather than the 395px an even
+ * division assumes. Measured against the image, even division centers the
+ * first icon 63px off and the last 74px off, clipping about a fifth of each,
+ * while the middle two land within 7px and look fine. That is what makes the
+ * error easy to ship, so these centers must remain hard-coded constants rather
+ * than being "simplified" back into arithmetic later.
+ */
 const SHEET = require("@/assets/images/ui/mode-icons-sheet.png");
 
 const SHEET_W = 2368;
