@@ -370,14 +370,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const competitionSessions = sessions.filter(isCompetitionSession);
     if (!competitionSessions.length) return null;
 
-    let weakest: ScoringDimension = SCORING_DIMENSIONS[0];
+    let weakest: ScoringDimension | null = null;
     let weakestAverage = Number.POSITIVE_INFINITY;
     for (const dimension of SCORING_DIMENSIONS) {
-      const total = competitionSessions.reduce((sum, session) => {
+      let total = 0;
+      let readings = 0;
+      for (const session of competitionSessions) {
         const score = session.scores[dimension];
-        return sum + (typeof score === "number" && Number.isFinite(score) ? score : 0);
-      }, 0);
-      const average = total / competitionSessions.length;
+        if (typeof score === "number" && Number.isFinite(score) && score > 0) {
+          total += score;
+          readings += 1;
+        }
+      }
+      if (readings === 0) continue;
+      const average = total / readings;
       if (average < weakestAverage) {
         weakest = dimension;
         weakestAverage = average;

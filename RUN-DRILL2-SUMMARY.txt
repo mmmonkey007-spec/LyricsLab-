@@ -1,0 +1,18 @@
+DRILL2 is complete within the 20-minute deadline.
+
+Changed only the long-term weakest-dimension averaging in
+artifacts/lyriclab/context/GameContext.tsx:
+- Counts only finite numeric readings greater than zero.
+- Averages each dimension over its own present-reading count.
+- Skips dimensions with no readings.
+- Returns null when no dimension has any readings, preserving the generic drill brief.
+
+Focused behavior checks:
+- High rhyme/originality/technique, low wordplay, absent flow/humour -> wordplay.
+- Lowest fully scored dimension is flow -> flowRhythm.
+- No sessions or no readings -> null.
+
+Verification:
+- Typecheck reports exactly the two pre-existing mutateAsync errors in
+  app/home.tsx and app/write.tsx.
+- Expo web export completed successfully with exit code 0.
