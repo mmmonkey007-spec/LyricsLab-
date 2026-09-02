@@ -16,7 +16,6 @@ import { useGame } from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 import { CLASS_META } from "@/services/classMeta";
-import ClassMark from "@/components/ClassMark";
 import RankEmblem from "@/components/RankEmblem";
 import {
   breakEvenFor,
@@ -107,10 +106,10 @@ export default function ProfileScreen() {
             {meta?.portrait ? (
               <Image source={meta.portrait} style={styles.portrait} resizeMode="cover" />
             ) : (
-              <ClassMark playerClass={chosenClass} size={68} fallbackEmoji={meta?.emoji ?? "🎤"} />
+              <Text style={styles.portraitFallback}>{meta?.emoji ?? "🎤"}</Text>
             )}
             <View style={[styles.classBadge, { backgroundColor: meta?.accentColor ?? colors.border }]}>
-              <ClassMark playerClass={chosenClass} size={22} fallbackEmoji={meta?.emoji ?? "🎤"} />
+              <Text style={styles.classBadgeText}>{meta?.emoji ?? "🎤"}</Text>
             </View>
           </View>
           <View style={styles.identityText}>
