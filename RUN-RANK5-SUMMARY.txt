@@ -1,0 +1,5 @@
+SOURCE: Applied the exact rank change from git commit 81cae06; it was readable, so it was not rebuilt from the description.
+RANK EMBLEM COMPONENT: PRESENT — RankEmblem cuts the four measured tier emblems from rank-tiers-sheet.png.
+PROFILE CHANGE: PRESENT — the current tier emblem is shown beside the rank name at 38 points square.
+TYPECHECK: Run with pnpm --filter @workspace/lyriclab run typecheck.
+TYPECHECK ERROR COUNT: 2
