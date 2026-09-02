@@ -1,0 +1,21 @@
+TREND1 is complete within the 20-minute deadline.
+
+Updated only the profile screen IMPROVEMENT card:
+- Kept the card pressable and its navigation to the progression screen.
+- Kept the IMPROVEMENT label and “See the full breakdown →” footer unchanged.
+- Made the trend number a left-aligned 30px, weight 800 anchor.
+- Preserved the existing positive/negative/zero color logic and positive plus sign.
+- Replaced the inline explanation with an 11px muted context line:
+  “points — last five sessions vs the five before them”.
+- Added the requested comment explaining the retention priority and prior label-weight rendering.
+- Left the RANK card exactly as it was.
+
+Verification:
+- Typecheck reports exactly the same two pre-existing mutateAsync errors in
+  app/home.tsx and app/write.tsx.
+- Expo web export completed successfully with exit code 0.
+- Source assertions confirm the trend value is 30px/800 and the context is 11px.
+- Expo workflow restarted successfully and bundled the app without startup errors.
+- The live preview reached the existing sign-in gate before the profile; its
+  console showed two pre-existing React Native Web accessibility-prop errors,
+  which are outside this isolated card change and were offered as a follow-up.

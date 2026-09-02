@@ -196,21 +196,21 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* Trend — the retention mechanic that was displayed to nobody */}
+        {/* Trend gets this weight because it is the retention mechanic the product list names; it had been rendering at label weight. */}
         <Pressable
           onPress={() => router.push("/progression")}
           style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
         >
           <Text style={[styles.cardLabel, { color: colors.mutedForeground }]}>IMPROVEMENT</Text>
-          <View style={styles.rankLine}>
+          <View style={styles.trendAnchor}>
             <Text
-              style={[styles.rankName, { color: trend > 0 ? "#4ADE80" : trend < 0 ? "#F87171" : colors.text }]}
+              style={[styles.trendValue, { color: trend > 0 ? "#4ADE80" : trend < 0 ? "#F87171" : colors.text }]}
             >
               {trend > 0 ? "+" : ""}
               {Math.round(trend)}
             </Text>
-            <Text style={[styles.rankStat, { color: colors.mutedForeground }]}>
-              points vs your earlier sessions
+            <Text style={[styles.trendContext, { color: colors.mutedForeground }]}>
+              points — last five sessions vs the five before them
             </Text>
           </View>
           <Text style={[styles.cardFoot, { color: colors.mutedForeground }]}>
@@ -259,7 +259,9 @@ const styles = StyleSheet.create({
   rankRateBlock: { alignItems: "flex-end", marginLeft: "auto" },
   rankRate: { fontSize: 30, fontWeight: "800", lineHeight: 32 },
   rankBreakEven: { fontSize: 11, fontWeight: "500", lineHeight: 14 },
-  rankStat: { fontSize: 15, fontWeight: "600" },
+  trendAnchor: { alignItems: "flex-start", gap: 2 },
+  trendValue: { fontSize: 30, fontWeight: "800", lineHeight: 32 },
+  trendContext: { fontSize: 11, fontWeight: "500", lineHeight: 14 },
   pointsTrack: { height: 6, borderRadius: 3, overflow: "hidden", marginTop: 2 },
   pointsFill: { height: 6, borderRadius: 3 },
   cardFoot: { fontSize: 12 },
