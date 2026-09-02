@@ -1,0 +1,6 @@
+MODE ICON COMPONENT: PRESENT — ModeIcon uses the locked 2368x448 sheet, 320px crop, and measured centers [260, 627, 994, 1360, 1729, 2097] at y=224.
+COURT ACKNOWLEDGEMENT: PRESENT — character-to-mode mapping is shared by navigation and the acknowledgement row, which shows the mode icon and readable mode label.
+SIGN-UP AND PASSWORD UX: PRESENT — signup checks for a missing session and switches to Sign In with an email-confirmation message; password has SHOW/HIDE control and no remember-me checkbox.
+FLAME SHEET DELETION: COMPLETE — streak-flame-sheet.png removed.
+TYPECHECK: Run with pnpm --filter @workspace/lyriclab run typecheck.
+TYPECHECK ERROR COUNT: 2

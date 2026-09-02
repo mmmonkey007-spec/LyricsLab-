@@ -21,7 +21,11 @@ interface AuthContextType {
   username: string | null;
   isGuest: boolean;
   isLoading: boolean;
-  signUp: (email: string, password: string, username: string) => Promise<{ error: string | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    username: string
+  ) => Promise<{ error: string | null; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
@@ -84,14 +88,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: string,
       password: string,
       uname: string
-    ): Promise<{ error: string | null }> => {
+    ): Promise<{ error: string | null; needsConfirmation?: boolean }> => {
       try {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { data: { username: uname } },
         });
         if (error) return { error: error.message };
+        if (!data.session) {
+          return { error: null, needsConfirmation: true };
+        }
         setUsername(uname);
         await AsyncStorage.multiSet([
           [USERNAME_KEY, uname],
