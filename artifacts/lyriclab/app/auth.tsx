@@ -77,8 +77,6 @@ export default function AuthScreen() {
       if (result.error) {
         setError(result.error);
       } else if ("needsConfirmation" in result && result.needsConfirmation) {
-        // The account was created but there is no session yet. Say so plainly
-        // rather than navigating into a signed-out app.
         setNotice(`Account created. Confirm your email at ${email.trim()}, then sign in.`);
         setEmailTab("signin");
       } else {

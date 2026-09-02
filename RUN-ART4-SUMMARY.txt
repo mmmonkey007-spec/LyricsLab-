@@ -1,0 +1,5 @@
+RANK-TIER ART: downloaded replacement is 1026231 bytes and 1824x576 pixels.
+AUTH PASSWORD PADDING: present on the PASSWORD input; the EMAIL input uses the plain input style.
+MODE ICON COMMENT: present; it documents the measured non-even tile centers and why arithmetic must not replace them.
+TYPECHECK: Run with pnpm --filter @workspace/lyriclab run typecheck.
+TYPECHECK ERROR COUNT: 2
