@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -36,6 +37,8 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState<"google" | "email" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { playBgMusic, stopBgMusicFade } = useSound();
 
   // Calm music on the auth/loading screen — shares the same Stars/Dreamer
@@ -60,6 +63,7 @@ export default function AuthScreen() {
 
   const handleEmailSubmit = async () => {
     setError(null);
+    setNotice(null);
     if (!email.trim()) { setError("Email is required."); return; }
     if (isSignUp && !username.trim()) { setError("Username is required."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
@@ -72,6 +76,11 @@ export default function AuthScreen() {
 
       if (result.error) {
         setError(result.error);
+      } else if ("needsConfirmation" in result && result.needsConfirmation) {
+        // The account was created but there is no session yet. Say so plainly
+        // rather than navigating into a signed-out app.
+        setNotice(`Account created. Confirm your email at ${email.trim()}, then sign in.`);
+        setEmailTab("signin");
       } else {
         router.replace("/main");
       }
@@ -173,7 +182,7 @@ export default function AuthScreen() {
                 {(["signin", "signup"] as EmailTab[]).map((t) => (
                   <TouchableOpacity
                     key={t}
-                    onPress={() => { setEmailTab(t); setError(null); }}
+                    onPress={() => { setEmailTab(t); setError(null); setNotice(null); }}
                     style={[
                       styles.tabBtn,
                       emailTab === t && { borderBottomColor: colors.accent, borderBottomWidth: 2 },
@@ -227,16 +236,33 @@ export default function AuthScreen() {
                 <View style={[styles.inputWrap, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                   <Text style={[styles.inputLabel, { color: colors.textMuted }]}>PASSWORD</Text>
                   <TextInput
-                    style={[styles.input, { color: colors.text }]}
+                    style={[styles.input, styles.inputWithReveal, { color: colors.text }]}
                     value={password}
                     onChangeText={setPassword}
                     placeholder="••••••••"
                     placeholderTextColor={colors.textMuted + "55"}
-                    secureTextEntry
+                    secureTextEntry={!showPassword}
                     returnKeyType="done"
                     onSubmitEditing={handleEmailSubmit}
                   />
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? "Hide password" : "Show password"}
+                    hitSlop={12}
+                    onPress={() => setShowPassword((v) => !v)}
+                    style={styles.revealBtn}
+                  >
+                    <Text style={[styles.revealText, { color: colors.textMuted }]}>
+                      {showPassword ? "HIDE" : "SHOW"}
+                    </Text>
+                  </Pressable>
                 </View>
+
+                {notice ? (
+                  <View style={[styles.errorBox, { backgroundColor: colors.accent + "18", borderColor: colors.accent + "44" }]}>
+                    <Text style={[styles.errorText, { color: colors.accent }]}>{notice}</Text>
+                  </View>
+                ) : null}
 
                 {error ? (
                   <View style={[styles.errorBox, { backgroundColor: colors.red + "18", borderColor: colors.red + "44" }]}>
@@ -368,6 +394,9 @@ const styles = StyleSheet.create({
   },
   inputLabel: { fontSize: 10, fontWeight: "700", letterSpacing: 1, marginBottom: 4 },
   input: { fontSize: 15, padding: 0 },
+  inputWithReveal: { paddingRight: 54 },
+  revealBtn: { position: "absolute", right: 12, bottom: 9, paddingHorizontal: 4, paddingVertical: 2 },
+  revealText: { fontSize: 11, fontWeight: "700", letterSpacing: 0.8 },
   errorBox: { borderRadius: 10, borderWidth: 1, padding: 11 },
   errorText: { fontSize: 13, fontWeight: "500", lineHeight: 18 },
   submitBtn: { borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 2 },
