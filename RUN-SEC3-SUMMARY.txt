@@ -1,0 +1,36 @@
+RUN-SEC3 is complete.
+
+What changed:
+- Added `app.set("trust proxy", 1)` in `artifacts/api-server/src/app.ts`
+  before middleware registration.
+- Changed `clientAddress()` in
+  `artifacts/api-server/src/middlewares/rate-limit.ts` to use
+  `req.ip || req.socket.remoteAddress || "unknown"`.
+- Removed the manual `x-forwarded-for` parsing.
+- The rate-limit window, limit, headers, 429 body, CORS, and diagnostics
+  environment gate were not changed.
+
+Verification:
+- API package typecheck: passed with zero errors.
+- Probe A, one stable client address: 30 successes, followed by 30 x 429;
+  first 429 was request 31.
+- Probe B, 60 different spoofed `x-forwarded-for` values with the same
+  proxy-appended address: 30 successes, followed by 30 x 429; first 429 was
+  request 31.
+- Resolved `req.ip` during the probes:
+  - Stable probe: `198.51.100.42`
+  - Spoofed-header probe: `198.51.100.43`
+  The differing spoofed first values did not change the limiter key.
+
+Push result:
+- Attempted once after all verification, with no retry.
+- Target: `origin` branch `workspace-import` on the `LyricsLab-` GitHub mirror.
+- Push failed with the exact output:
+  `remote: Invalid username or token. Password authentication is not supported for Git operations.`
+  `fatal: Authentication failed for 'https://github.com/mmmonkey007-spec/LyricsLab-.git/'`
+
+Files changed in RUN-SEC3:
+- `RUN-SEC3-STARTED.txt`
+- `RUN-SEC3-SUMMARY.txt`
+- `artifacts/api-server/src/app.ts`
+- `artifacts/api-server/src/middlewares/rate-limit.ts`
