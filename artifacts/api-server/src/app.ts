@@ -3,8 +3,17 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { apiRateLimiter } from "./middlewares/rate-limit";
 
 const app: Express = express();
+
+const isProduction = process.env.NODE_ENV === "production";
+const allowedOrigins = new Set(
+  (process.env.ALLOWED_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
 
 app.use(
   pinoHttp({
@@ -25,10 +34,22 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(
+  cors({
+    credentials: true,
+    origin(origin, callback) {
+      if (!origin || !isProduction || allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error("Origin not allowed by CORS"));
+    },
+  }),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api", router);
+app.use("/api", apiRateLimiter, router);
 
 export default app;

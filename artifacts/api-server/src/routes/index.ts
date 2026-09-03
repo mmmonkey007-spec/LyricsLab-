@@ -11,6 +11,9 @@ router.use(healthRouter);
 router.use(lyricsRouter);
 router.use(aiRouter);
 router.use(botBattlesRouter);
-router.use(devRouter);
+
+if (process.env.NODE_ENV !== "production") {
+  router.use(devRouter);
+}
 
 export default router;
