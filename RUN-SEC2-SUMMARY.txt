@@ -1,0 +1,41 @@
+RUN-SEC2 is complete within the 30-minute deadline.
+
+Push result:
+- No git push was attempted, as explicitly required for SEC2.
+- The prior SEC1 authentication failure remains documented in RUN-SEC1-BLOCKED.txt.
+
+API security results:
+- Rate limiting: added a dependency-free fixed-window limiter for every /api route.
+  It uses the first forwarded-for address when present, otherwise the request
+  address; allows 30 requests per 60-second window; returns JSON 429 responses;
+  sends RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset, and Retry-After
+  when limited; and prunes expired entries after the map exceeds 10,000 keys.
+- CORS: requests without an Origin remain allowed; non-production reflects any
+  origin; production allows only origins listed in ALLOWED_ORIGINS; credentials
+  remain enabled.
+- Development diagnostics: /api/dev/test-keys is mounted only outside production.
+
+Acceptance verification:
+- API package typecheck passed with zero errors.
+- Sixty POSTs to /api/bot-battles from one forwarded address returned 30
+  successful 201 responses followed by 30 429 responses; the first 429 was
+  request 31.
+- Development diagnostics returned 200.
+- A separate NODE_ENV=production server returned 404 for the diagnostics route.
+- Rate-limit response headers were present.
+- The managed API workflow restarted successfully and served the checks.
+
+Files changed:
+- RUN-SEC2-STARTED.txt
+- RUN-SEC2-SUMMARY.txt
+- artifacts/api-server/src/app.ts
+- artifacts/api-server/src/middlewares/rate-limit.ts
+- artifacts/api-server/src/routes/index.ts
+
+Files intentionally not touched:
+- artifacts/api-server/src/routes/dev.ts
+- artifacts/api-server/src/routes/bot-battles.ts
+- artifacts/api-server/package.json and lockfiles
+- all other api-server route, library, and configuration files
+- all LyricLab mobile application files
+- Git remotes and branches
