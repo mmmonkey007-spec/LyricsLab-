@@ -12,8 +12,7 @@ type RateLimitEntry = {
 const clients = new Map<string, RateLimitEntry>();
 
 function clientAddress(req: Parameters<RequestHandler>[0]): string {
-  const forwardedFor = req.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwardedFor || req.ip || req.socket.remoteAddress || "unknown";
+  return req.ip || req.socket.remoteAddress || "unknown";
 }
 
 function pruneExpired(now: number): void {

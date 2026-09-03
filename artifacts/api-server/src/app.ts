@@ -7,6 +7,8 @@ import { apiRateLimiter } from "./middlewares/rate-limit";
 
 const app: Express = express();
 
+app.set("trust proxy", 1);
+
 const isProduction = process.env.NODE_ENV === "production";
 const allowedOrigins = new Set(
   (process.env.ALLOWED_ORIGINS ?? "")
