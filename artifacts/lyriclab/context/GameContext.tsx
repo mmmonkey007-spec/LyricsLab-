@@ -53,6 +53,15 @@ export const GENERIC_DRILL_BRIEF = "Open drill — write anything, OG scores it"
 export interface StreakData {
   currentStreak: number;
   longestStreak: number;
+  /**
+   * True when a live streak has NO session today and will reset tomorrow.
+   * ⛔ RULED: an interface never shows a state it is about to withdraw. This
+   * lives on the DATA rather than in one screen, because three surfaces render
+   * the streak and only one of them was computing the truth for itself.
+   */
+  atRisk: boolean;
+  /** True when today already carries a competition session. */
+  playedToday: boolean;
 }
 
 export interface PreAnalysis {
@@ -169,7 +178,7 @@ function toDateStr(ts: number): string {
 
 function computeStreak(sessions: GameSession[]): StreakData {
   const real = sessions.filter(isCompetitionSession);
-  if (!real.length) return { currentStreak: 0, longestStreak: 0 };
+  if (!real.length) return { currentStreak: 0, longestStreak: 0, atRisk: false, playedToday: false };
 
   const dateSet = new Set(real.map((s) => toDateStr(s.timestamp)));
   const sortedDates = Array.from(dateSet).sort();
@@ -188,12 +197,13 @@ function computeStreak(sessions: GameSession[]): StreakData {
   // Current streak — walk backwards from today (or yesterday if today has none)
   const todayStr = toDateStr(Date.now());
   const yesterdayStr = toDateStr(Date.now() - 86_400_000);
-  if (!dateSet.has(todayStr) && !dateSet.has(yesterdayStr)) {
-    return { currentStreak: 0, longestStreak: longest };
+  const playedToday = dateSet.has(todayStr);
+  if (!playedToday && !dateSet.has(yesterdayStr)) {
+    return { currentStreak: 0, longestStreak: longest, atRisk: false, playedToday: false };
   }
 
   let current = 0;
-  let check = dateSet.has(todayStr) ? new Date(todayStr) : new Date(yesterdayStr);
+  let check = playedToday ? new Date(todayStr) : new Date(yesterdayStr);
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const key = toDateStr(check.getTime());
@@ -202,7 +212,14 @@ function computeStreak(sessions: GameSession[]): StreakData {
     check = new Date(check.getTime() - 86_400_000);
   }
 
-  return { currentStreak: current, longestStreak: Math.max(longest, current) };
+  // At risk exactly when the run is alive but anchored on yesterday: the count
+  // shown is real, and it dies at midnight unless today gets a session.
+  return {
+    currentStreak: current,
+    longestStreak: Math.max(longest, current),
+    atRisk: current > 0 && !playedToday,
+    playedToday,
+  };
 }
 const STORAGE_KEY_ENERGY = "lyriclab_energy_v1";
 const MAX_ENERGY = 5;

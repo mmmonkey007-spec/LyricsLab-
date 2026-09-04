@@ -74,15 +74,11 @@ export default function ProfileScreen() {
   // Ruled: an interface never shows a state it is about to withdraw. If today
   // has no session the streak is AT RISK and says so, rather than displaying an
   // intact count on the exact day it dies.
-  const playedToday = useMemo(() => {
-    const today = toDateStr(Date.now());
-    return sessions.some((s) => isCompetitionSession(s) && toDateStr(s.timestamp) === today);
-  }, [sessions]);
-  const playedYesterday = useMemo(() => {
-    const yday = toDateStr(Date.now() - DAY_MS);
-    return sessions.some((s) => isCompetitionSession(s) && toDateStr(s.timestamp) === yday);
-  }, [sessions]);
-  const streakAtRisk = streak.currentStreak > 0 && !playedToday && playedYesterday;
+  // The at-risk truth is computed once, on the streak data itself, so every
+  // surface that renders a streak renders the same verdict. It used to be
+  // computed here and nowhere else, which left two other screens showing an
+  // intact count on the exact day the run dies.
+  const { atRisk: streakAtRisk, playedToday } = streak;
 
   const trend = getImprovementTrend();
 

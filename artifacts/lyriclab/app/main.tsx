@@ -93,9 +93,13 @@ export default function MainScreen() {
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>ENERGY</Text>
           </View>
           <View style={[styles.stat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={styles.flame}>🔥</Text>
-            <Text style={[styles.statValue, { color: colors.text }]}>{streak.currentStreak}</Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>STREAK</Text>
+            <Text style={styles.flame}>{streak.atRisk ? "🕯️" : "🔥"}</Text>
+            <Text style={[styles.statValue, { color: streak.atRisk ? colors.destructive : colors.text }]}>
+              {streak.currentStreak}
+            </Text>
+            <Text style={[styles.statLabel, { color: streak.atRisk ? colors.destructive : colors.textMuted }]}>
+              {streak.atRisk ? "AT RISK" : "STREAK"}
+            </Text>
           </View>
         </View>
 

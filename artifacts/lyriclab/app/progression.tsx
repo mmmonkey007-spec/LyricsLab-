@@ -251,9 +251,12 @@ export default function ProgressionScreen() {
         {/* Streak callout — shown if streak > 0, not shown if 0 */}
         {streak.currentStreak > 0 && (
           <View style={[styles.streakBanner, { backgroundColor: colors.accent + "18", borderColor: colors.accent + "40" }]}>
-            <Text style={[styles.streakFlame, { color: colors.accent }]}>🔥</Text>
+            <Text style={[styles.streakFlame, { color: streak.atRisk ? colors.destructive : colors.accent }]}>
+              {streak.atRisk ? "🕯️" : "🔥"}
+            </Text>
             <Text style={[styles.streakBannerText, { color: colors.text }]}>
               {streak.currentStreak}-day run
+              {streak.atRisk ? " · at risk today" : ""}
             </Text>
             {streak.longestStreak > streak.currentStreak && (
               <Text style={[styles.streakBannerSub, { color: colors.textMuted }]}>
