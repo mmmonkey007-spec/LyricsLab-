@@ -1,0 +1,18 @@
+RUN-MIX2 status: success
+PROVENANCE: Both inputs are derived from a copyrighted commercial recording and the output is a PRIVATE TEST ARTEFACT — a measuring instrument, never shipped to a player, never published, never bundled with anything sold.
+Generated vocal take input asset: asset_1HcBKqxoz4UzjdHu2fJDfFz1
+Source four-bar cut input asset: asset_GcCUQzFffNY3biRR8e2D1nR4
+Source duration seconds: 10.945
+Generated duration seconds: 10.920
+Output file: /home/runner/workspace/RUN-MIX2-comparison.mp3
+Output duration seconds: 22.831
+Uploaded Scenario asset id: asset_gPJYeAmGnH39H3H1A9TfJobc
+Scenario upload id: upl_D3p5rV1M6noWJaKGGS84iQYB
+Sequence: source four-bar cut, approximately one second of silence, generated vocal take.
+Normalization: none; inputs were concatenated at their original levels.
+Files changed:
+  RUN-MIX2-STARTED.txt
+  RUN-MIX2-comparison.mp3
+  RUN-MIX2-SUMMARY.txt
+  RUN-MIX2-work/source-four-bar-cut.mp3
+  RUN-MIX2-work/generated-vocal-take.mp3
