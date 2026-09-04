@@ -1,0 +1,3 @@
+AUTH3 push blocked: GitHub push to origin branch workspace-import failed with exit 128. Waiting for valid GitHub credentials/authorization for the configured HTTPS remote.
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https://github.com/mmmonkey007-spec/LyricsLab-.git/'
