@@ -1,0 +1,29 @@
+RUN-AUTH3 — API authentication
+
+Implementation:
+- Added ES256-only Supabase access-token middleware using Node crypto and global fetch.
+- Fetches the Supabase Auth JWKS from the project's standard well-known endpoint.
+- Caches JWKS for approximately 10 minutes and applies a 30-second refresh floor.
+- Uses raw IEEE-P1363 R||S signature verification, checks issuer/expiry/subject, and attaches id/email/role to req.user.
+- Returns 401 for invalid credentials and 503 when a required JWKS refresh cannot be fetched.
+- AI, bot-battle, judging, and development key-diagnostic routes are protected; health and lyric utility routes remain open.
+- No dependency was added.
+
+Verification:
+1. API package typecheck: PASS — `pnpm --filter @workspace/api-server run typecheck` completed with zero errors.
+2. Authentication rejection probes: PASS — no Authorization header returned 401; syntactically valid unsigned token returned 401; unsupported-algorithm token returned 401.
+3. Proxy-header rate-limit probe: PASS — 60 requests to `/api/healthz`, each with a different made-up `X-Forwarded-For`: requests 1–30 returned 200 and requests 31–60 returned 429. The proxy-header bypass is closed.
+
+Files changed:
+- RUN-AUTH3-STARTED.txt
+- artifacts/api-server/src/middlewares/supabase-auth.ts
+
+Files not touched:
+- artifacts/api-server/src/app.ts
+- artifacts/api-server/src/middlewares/rate-limit.ts
+- artifacts/api-server/src/routes/health.ts
+- artifacts/api-server/src/routes/ai.ts
+- artifacts/api-server/src/routes/bot-battles.ts
+- package manifests and lockfiles
+
+The configured API workflow restarted successfully and served all verification probes.

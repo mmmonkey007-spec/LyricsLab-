@@ -4,7 +4,6 @@ import type { NextFunction, Request, RequestHandler, Response } from "express";
 const DEFAULT_SUPABASE_URL = "https://tnshtklviovkcboypyfj.supabase.co";
 const JWKS_TTL_MS = 10 * 60 * 1000;
 const JWKS_REFRESH_FLOOR_MS = 30 * 1000;
-const CLOCK_SKEW_SECONDS = 5;
 
 type JwtHeader = {
   alg?: unknown;
@@ -19,12 +18,14 @@ type JwtClaims = {
   role?: unknown;
 };
 
-type Jwk = JsonWebKey & {
-  kid?: string;
-  kty?: string;
+type Jwk = {
+  kid: string;
+  kty: string;
   alg?: string;
-  crv?: string;
+  crv: string;
   use?: string;
+  x: string;
+  y: string;
 };
 
 type JwksResponse = {
@@ -113,7 +114,6 @@ function isUsableJwk(value: unknown): value is Jwk {
     typeof key.kid === "string" &&
     key.kty === "EC" &&
     key.crv === "P-256" &&
-    key.x instanceof String === false &&
     typeof key.x === "string" &&
     typeof key.y === "string"
   );
@@ -194,7 +194,7 @@ export const requireSupabaseAuth: RequestHandler = async (
     typeof parsed.header.kid !== "string" ||
     typeof parsed.claims.exp !== "number" ||
     !Number.isFinite(parsed.claims.exp) ||
-    parsed.claims.exp <= Math.floor(Date.now() / 1000) - CLOCK_SKEW_SECONDS ||
+    parsed.claims.exp <= Math.floor(Date.now() / 1000) ||
     parsed.claims.iss !== issuer() ||
     typeof parsed.claims.sub !== "string" ||
     parsed.claims.sub.trim().length === 0
