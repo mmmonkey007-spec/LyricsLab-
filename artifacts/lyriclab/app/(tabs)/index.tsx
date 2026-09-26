@@ -1,8 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Animated,
   Image,
   Platform,
   Pressable,
@@ -12,12 +11,15 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 
 import { useColors } from "@/hooks/useColors";
-import ModeIcon from "@/components/ModeIcon";
+import { CourtBackflipStage } from "@/components/CourtBackflipStage";
 import type { GameMode } from "@/context/GameContext";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useRicoCourtBackflipQueue } from "@/hooks/useRicoCourtBackflipQueue";
 
 const COURT_ART = require("../../assets/court/court-with-cast.png");
 
@@ -28,14 +30,6 @@ const CHARACTER_MODE: Record<CharacterName, GameMode> = {
   BUZZ: "blitz",
   CHILL: "drill",
   RICO: "prompted",
-};
-
-const MODE_LABEL: Record<GameMode, string> = {
-  battle: "Rap Battle",
-  blitz: "Blitz",
-  free: "Freestyle",
-  drill: "Drill",
-  prompted: "Prompted",
 };
 
 type HitRegion = {
@@ -64,6 +58,7 @@ function CharacterHitRegion({
   onPressIn,
   onPressOut,
   onPress,
+  reducedMotion,
 }: {
   region: HitRegion;
   debug: boolean;
@@ -71,17 +66,19 @@ function CharacterHitRegion({
   onPressIn: () => void;
   onPressOut: () => void;
   onPress: () => void;
+  reducedMotion: boolean;
 }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const scale = useSharedValue(1);
 
   useEffect(() => {
-    Animated.spring(scale, {
-      toValue: active ? 0.965 : 1,
-      useNativeDriver: Platform.OS !== "web",
-      speed: 26,
-      bounciness: 5,
-    }).start();
-  }, [active, scale]);
+    scale.value = reducedMotion
+      ? active ? 0.965 : 1
+      : withSpring(active ? 0.965 : 1, { damping: 18, stiffness: 220 });
+  }, [active, reducedMotion, scale]);
+  const feedbackStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: debug ? 1 : active ? 1 : 0,
+  }), [debug]);
 
   return (
     <Pressable
@@ -106,7 +103,7 @@ function CharacterHitRegion({
         pointerEvents="none"
         style={[
           styles.hitFeedback,
-          { transform: [{ scale }] },
+           feedbackStyle,
           debug && styles.debugRegion,
           debug && { borderColor: region.name === "BEEF" ? "#FF4D6D" : "#F5C518" },
         ]}
@@ -122,41 +119,17 @@ export default function CourtHomeScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const [debugRegions, setDebugRegions] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<CharacterName | null>(null);
-  const [acknowledgedCharacter, setAcknowledgedCharacter] = useState<CharacterName | null>(null);
-  const acknowledgementTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const navigationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reducedMotion = useReducedMotion();
+  const ricoBackflipQueue = useRicoCourtBackflipQueue();
 
   const imageWidth = width;
   const imageHeight = imageWidth * (3 / 2);
   const stageHeight = Math.max(height, imageHeight);
 
-  useEffect(() => {
-    return () => {
-      if (acknowledgementTimer.current) {
-        clearTimeout(acknowledgementTimer.current);
-      }
-      if (navigationTimer.current) {
-        clearTimeout(navigationTimer.current);
-      }
-    };
-  }, []);
-
   const showCharacter = (name: CharacterName) => {
-    setAcknowledgedCharacter(name);
-    if (acknowledgementTimer.current) {
-      clearTimeout(acknowledgementTimer.current);
-    }
-    acknowledgementTimer.current = setTimeout(() => {
-      setAcknowledgedCharacter(null);
-    }, 1200);
+    ricoBackflipQueue.cancel();
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-    if (navigationTimer.current) {
-      clearTimeout(navigationTimer.current);
-    }
-    navigationTimer.current = setTimeout(() => {
-      router.push({ pathname: "/write", params: { mode: CHARACTER_MODE[name] } });
-    }, 180);
+    router.push({ pathname: "/write", params: { mode: CHARACTER_MODE[name] } });
   };
 
   const handleRicoPress = () => showCharacter("RICO");
@@ -194,8 +167,18 @@ export default function CourtHomeScreen() {
               onPressIn={() => setActiveCharacter(region.name)}
               onPressOut={() => setActiveCharacter(null)}
               onPress={handlers[region.name]}
+              reducedMotion={reducedMotion}
             />
           ))}
+          {ricoBackflipQueue.active ? (
+            <CourtBackflipStage
+              playKey={ricoBackflipQueue.playKey}
+              playbackActive={true}
+              onEnded={ricoBackflipQueue.onEnded}
+              onError={ricoBackflipQueue.onError}
+              style={styles.courtBackflipOverlay}
+            />
+          ) : null}
         </View>
       </View>
 
@@ -228,17 +211,6 @@ export default function CourtHomeScreen() {
           ) : null}
         </View>
 
-        {acknowledgedCharacter ? (
-          <View accessibilityLiveRegion="polite" style={[styles.acknowledgement, { backgroundColor: colors.surface, borderColor: colors.accent }]}>
-            <ModeIcon mode={CHARACTER_MODE[acknowledgedCharacter]} size={34} />
-            <View style={styles.acknowledgementCopy}>
-              <Text style={[styles.acknowledgementName, { color: colors.accent }]}>{acknowledgedCharacter}</Text>
-              <Text style={[styles.acknowledgementLabel, { color: colors.textMuted }]}>
-                {MODE_LABEL[CHARACTER_MODE[acknowledgedCharacter]]}
-              </Text>
-            </View>
-          </View>
-        ) : null}
       </View>
     </View>
   );
@@ -262,6 +234,14 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     width: "100%",
     height: "100%",
+  },
+  courtBackflipOverlay: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 5,
   },
   hitRegion: {
     position: "absolute",
@@ -315,31 +295,5 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "800",
     letterSpacing: 0.8,
-  },
-  acknowledgement: {
-    alignSelf: "center",
-    minWidth: 120,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: 12,
-    paddingRight: 18,
-    paddingVertical: 10,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  acknowledgementCopy: {
-    alignItems: "flex-start",
-  },
-  acknowledgementLabel: {
-    fontSize: 9,
-    fontWeight: "800",
-    letterSpacing: 1.2,
-  },
-  acknowledgementName: {
-    marginTop: 2,
-    fontSize: 19,
-    fontWeight: "900",
-    letterSpacing: 2,
   },
 });

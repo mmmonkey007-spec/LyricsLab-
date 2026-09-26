@@ -5,10 +5,16 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "e2e:security": "tsx ./src/e2e-security.ts",
+    "e2e:prelaunch": "tsx ./src/e2e-prelaunch.ts",
+    "check:moves": "python3 ./src/check_move_videos.py",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.110.0",
     "@types/node": "catalog:",
+    "@types/pg": "^8.15.6",
+    "pg": "^8.22.0",
     "tsx": "catalog:"
   }
 }

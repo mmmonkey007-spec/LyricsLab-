@@ -8,6 +8,18 @@ import React, {
   useState,
 } from "react";
 import { AppState } from "react-native";
+import { useOnboarding, type PlayerClass, type QuestReward } from "@/context/OnboardingContext";
+import {
+  computeStreakAndFreezes,
+  toDateStr,
+  type StreakComputation,
+  type StreakData,
+} from "@/services/streak";
+import { levelForXp, xpEarnedForSession } from "@/services/levels";
+export { levelForXp, xpEarnedForSession } from "@/services/levels";
+
+export type { StreakComputation, StreakData } from "@/services/streak";
+export type HeroClass = "assassin" | "rider" | "trickster";
 
 export type GameMode = "free" | "prompted" | "blitz" | "battle" | "drill";
 
@@ -24,19 +36,20 @@ export interface DimensionScores {
   flowRhythm: number;
   wordplay: number;
   originality: number;
-  technique: number;
+  storytelling: number;
+  technique?: number;
   humorCraft: number;
 }
 
-export type ScoringDimension = keyof DimensionScores;
+export type ScoringDimension = Exclude<keyof DimensionScores, "technique">;
 
 export const SCORING_DIMENSIONS: readonly ScoringDimension[] = [
   "rhymeQuality",
   "flowRhythm",
   "wordplay",
-  "originality",
-  "technique",
   "humorCraft",
+  "storytelling",
+  "originality",
 ];
 
 export const DRILL_BRIEFS: Record<ScoringDimension, string> = {
@@ -44,16 +57,11 @@ export const DRILL_BRIEFS: Record<ScoringDimension, string> = {
   flowRhythm: "Write four bars with the same steady cadence. Read them aloud twice and keep the beat even from start to finish.",
   wordplay: "Write four bars around one double meaning. Make the first read clear, then let the second meaning snap into place.",
   originality: "Write four bars from a specific moment only you could describe. Add one unexpected image and avoid the first cliché.",
-  technique: "Write four bars using an internal rhyme and one multi-syllabic rhyme in every bar. Keep the meaning sharp.",
+  storytelling: "Write four bars that tell a small story: a situation, a turn, and a consequence. Every bar should move it forward.",
   humorCraft: "Write four bars that set up and pay off one joke. Use a surprising comparison, then make the last bar the punchline.",
 };
 
 export const GENERIC_DRILL_BRIEF = "Open drill — write anything, OG scores it";
-
-export interface StreakData {
-  currentStreak: number;
-  longestStreak: number;
-}
 
 export interface PreAnalysis {
   wordCount: number;
@@ -107,7 +115,9 @@ export interface GameSession {
   battleOpponentLyrics?: string;
   battlePlayerRelativeScore?: number;
   battleOpponentRelativeScore?: number;
-  battleWinner?: "player" | "opponent";
+  battleWinner?: "player" | "opponent" | "draw";
+  battlePlayerFinalScore?: number;
+  battleOpponentFinalScore?: number;
   battleVerdict?: string;
   battlePlayerDimScores?: DimensionScores;
   battleOpponentDimScores?: DimensionScores;
@@ -116,6 +126,7 @@ export interface GameSession {
   botBattleTier?: "bronze" | "silver" | "gold" | "master";
   botBattleStatus?: "started" | "verse_submitted" | "completed";
   battleBotName?: string;
+  playerClass?: PlayerClass;
 }
 
 interface EnergyData {
@@ -130,6 +141,10 @@ interface GameContextType {
   maxEnergy: number;
   nextRegenMs: number;
   streak: StreakData;
+  streakReward: QuestReward | null;
+  dismissStreakReward: () => void;
+  classXp: Record<HeroClass, number>;
+  classLevels: Record<HeroClass, number>;
   setCurrentSession: (session: GameSession | null) => void;
   saveSession: (session: GameSession) => Promise<void>;
   consumeEnergy: (mode: GameMode) => Promise<boolean>;
@@ -141,11 +156,23 @@ interface GameContextType {
   getWeakestDimension: () => ScoringDimension | null;
   devSetEnergy: (n: number) => void;
   devResetGame: () => Promise<void>;
+  resetGameData: () => Promise<void>;
 }
 
 const GameContext = createContext<GameContextType | null>(null);
 
 const STORAGE_KEY_SESSIONS = "lyriclab_sessions";
+export const STORAGE_KEY_COMPETITION_DAYS = "lyriclab_competition_days_v1";
+const STORAGE_KEY_FREEZE_REWARD_SHOWN = "lyriclab_streak_freeze_reward_shown_v1";
+export const STORAGE_KEY_CLASS_XP = "lyriclab_class_xp_v1";
+const STORAGE_KEY_LEVEL_REWARD_SHOWN = "lyriclab_level_reward_shown_v1";
+const MAX_FREEZES = 2;
+const DEFAULT_CLASS_XP: Record<HeroClass, number> = { assassin: 0, rider: 0, trickster: 0 };
+const DEFAULT_LEVELS: Record<HeroClass, number> = { assassin: 1, rider: 1, trickster: 1 };
+
+function heroClass(cls: PlayerClass | null | undefined): HeroClass {
+  return cls === "rider" || cls === "trickster" ? cls : "assassin";
+}
 
 // ── Streak computation ─────────────────────────────────────────────────────
 // Returns currentStreak (consecutive days ending today or yesterday with a
@@ -162,48 +189,6 @@ export function isCompetitionSession(session: Pick<GameSession, "mode" | "isWeak
 
 // "Yesterday" grace: a streak that ended yesterday is still shown so a single
 // missed midnight doesn't wipe it — but it won't grow until today is played.
-function toDateStr(ts: number): string {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-function computeStreak(sessions: GameSession[]): StreakData {
-  const real = sessions.filter(isCompetitionSession);
-  if (!real.length) return { currentStreak: 0, longestStreak: 0 };
-
-  const dateSet = new Set(real.map((s) => toDateStr(s.timestamp)));
-  const sortedDates = Array.from(dateSet).sort();
-
-  // Longest streak scan
-  let longest = 1;
-  let run = 1;
-  for (let i = 1; i < sortedDates.length; i++) {
-    const prev = new Date(sortedDates[i - 1]!).getTime();
-    const curr = new Date(sortedDates[i]!).getTime();
-    const diffDays = Math.round((curr - prev) / 86_400_000);
-    if (diffDays === 1) { run++; longest = Math.max(longest, run); }
-    else run = 1;
-  }
-
-  // Current streak — walk backwards from today (or yesterday if today has none)
-  const todayStr = toDateStr(Date.now());
-  const yesterdayStr = toDateStr(Date.now() - 86_400_000);
-  if (!dateSet.has(todayStr) && !dateSet.has(yesterdayStr)) {
-    return { currentStreak: 0, longestStreak: longest };
-  }
-
-  let current = 0;
-  let check = dateSet.has(todayStr) ? new Date(todayStr) : new Date(yesterdayStr);
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
-    const key = toDateStr(check.getTime());
-    if (!dateSet.has(key)) break;
-    current++;
-    check = new Date(check.getTime() - 86_400_000);
-  }
-
-  return { currentStreak: current, longestStreak: Math.max(longest, current) };
-}
 const STORAGE_KEY_ENERGY = "lyriclab_energy_v1";
 const MAX_ENERGY = 5;
 const REGEN_INTERVAL_MS = 35 * 60 * 1000; // 35 min per +1 energy
@@ -228,7 +213,13 @@ function computeNextRegenMs(data: EnergyData): number {
 }
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+  const { chosenClass } = useOnboarding();
   const [sessions, setSessions] = useState<GameSession[]>([]);
+  const [competitionDays, setCompetitionDays] = useState<string[]>([]);
+  const [freezeRewardShown, setFreezeRewardShown] = useState(0);
+  const [streakReward, setStreakReward] = useState<QuestReward | null>(null);
+  const [classXp, setClassXp] = useState<Record<HeroClass, number>>(DEFAULT_CLASS_XP);
+  const [levelRewardShown, setLevelRewardShown] = useState<Record<HeroClass, number>>(DEFAULT_LEVELS);
   const [currentSession, setCurrentSession] = useState<GameSession | null>(null);
   const [energyData, setEnergyData] = useState<EnergyData>({
     energy: MAX_ENERGY,
@@ -258,14 +249,54 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const loadData = async () => {
       try {
         const sessionsRaw = await AsyncStorage.getItem(STORAGE_KEY_SESSIONS);
-        if (sessionsRaw) setSessions(JSON.parse(sessionsRaw) as GameSession[]);
+        const loadedSessions = sessionsRaw ? (JSON.parse(sessionsRaw) as GameSession[]) : [];
+        if (sessionsRaw) setSessions(loadedSessions);
+        const xpRaw = await AsyncStorage.getItem(STORAGE_KEY_CLASS_XP);
+        let loadedXp: Record<HeroClass, number>;
+        if (xpRaw) {
+          loadedXp = { ...DEFAULT_CLASS_XP, ...(JSON.parse(xpRaw) as Partial<Record<HeroClass, number>>) };
+        } else {
+          loadedXp = { ...DEFAULT_CLASS_XP };
+          const fallbackClass = chosenClass ?? "assassin";
+          for (const saved of loadedSessions) {
+            const cls = heroClass(saved.playerClass ?? fallbackClass);
+            loadedXp[cls] += xpEarnedForSession(saved.finalScore, isDrillSession(saved));
+          }
+          await AsyncStorage.setItem(STORAGE_KEY_CLASS_XP, JSON.stringify(loadedXp));
+        }
+        setClassXp(loadedXp);
+        const levelShownRaw = await AsyncStorage.getItem(STORAGE_KEY_LEVEL_REWARD_SHOWN);
+        const loadedShown = levelShownRaw
+          ? { ...DEFAULT_LEVELS, ...(JSON.parse(levelShownRaw) as Partial<Record<HeroClass, number>>) }
+          : { assassin: levelForXp(loadedXp.assassin), rider: levelForXp(loadedXp.rider), trickster: levelForXp(loadedXp.trickster) };
+        setLevelRewardShown(loadedShown);
+        if (!levelShownRaw) await AsyncStorage.setItem(STORAGE_KEY_LEVEL_REWARD_SHOWN, JSON.stringify(loadedShown));
+        const daysRaw = await AsyncStorage.getItem(STORAGE_KEY_COMPETITION_DAYS);
+        let days: string[];
+        if (daysRaw) {
+          days = JSON.parse(daysRaw) as string[];
+        } else {
+          days = Array.from(
+            new Set(
+              loadedSessions
+                .filter(isCompetitionSession)
+                .map((session) => toDateStr(session.timestamp)),
+            ),
+          ).sort();
+          await AsyncStorage.setItem(STORAGE_KEY_COMPETITION_DAYS, JSON.stringify(days));
+        }
+        setCompetitionDays(days);
+        const shownRaw = await AsyncStorage.getItem(STORAGE_KEY_FREEZE_REWARD_SHOWN);
+        const shown = shownRaw ? Number(shownRaw) : computeStreakAndFreezes(days, toDateStr(Date.now())).freezesEarnedTotal;
+        setFreezeRewardShown(Number.isFinite(shown) ? shown : 0);
+        if (!shownRaw) await AsyncStorage.setItem(STORAGE_KEY_FREEZE_REWARD_SHOWN, String(shown));
       } catch {
         // ignore
       }
       await loadAndApplyRegen();
     };
     void loadData();
-  }, [loadAndApplyRegen]);
+  }, [chosenClass, loadAndApplyRegen]);
 
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
@@ -291,12 +322,52 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [energyData.energy]);
 
   const saveSession = useCallback(async (session: GameSession) => {
+    const sessionWithClass: GameSession = { ...session, playerClass: session.playerClass ?? heroClass(chosenClass) };
     setSessions((prev) => {
-      const updated = [session, ...prev].slice(0, MAX_SESSIONS);
+      const updated = [sessionWithClass, ...prev].slice(0, MAX_SESSIONS);
       AsyncStorage.setItem(STORAGE_KEY_SESSIONS, JSON.stringify(updated)).catch(() => {});
       return updated;
     });
-  }, []);
+    setClassXp((previous) => {
+      const cls = heroClass(sessionWithClass.playerClass);
+      const next = { ...previous, [cls]: previous[cls] + xpEarnedForSession(sessionWithClass.finalScore, isDrillSession(sessionWithClass)) };
+      AsyncStorage.setItem(STORAGE_KEY_CLASS_XP, JSON.stringify(next)).catch(() => {});
+      const nextLevel = levelForXp(next[cls]);
+      if (nextLevel > levelRewardShown[cls]) {
+        const shown = { ...levelRewardShown, [cls]: nextLevel };
+        setLevelRewardShown(shown);
+        AsyncStorage.setItem(STORAGE_KEY_LEVEL_REWARD_SHOWN, JSON.stringify(shown)).catch(() => {});
+        setStreakReward({
+          questNumber: 0,
+          questTitle: `Level up — Level ${nextLevel}`,
+          items: [{ label: "Level gained", icon: "trending-up" }],
+          energyRefund: 0,
+        });
+      }
+      return next;
+    });
+    if (isCompetitionSession(sessionWithClass)) {
+      setCompetitionDays((previous) => {
+        const day = toDateStr(sessionWithClass.timestamp);
+        if (previous.includes(day)) return previous;
+        const next = [...previous, day].sort();
+        AsyncStorage.setItem(STORAGE_KEY_COMPETITION_DAYS, JSON.stringify(next)).catch(() => {});
+        const computation = computeStreakAndFreezes(next, toDateStr(Date.now()));
+        if (computation.freezesEarnedTotal > freezeRewardShown) {
+          const earned = computation.freezesEarnedTotal - freezeRewardShown;
+          setFreezeRewardShown(computation.freezesEarnedTotal);
+          AsyncStorage.setItem(STORAGE_KEY_FREEZE_REWARD_SHOWN, String(computation.freezesEarnedTotal)).catch(() => {});
+          setStreakReward({
+            questNumber: 0,
+            questTitle: "Streak freeze earned — it protects one missed day.",
+            items: [{ label: `+${earned} Streak Freeze`, icon: "shield" }],
+            energyRefund: 0,
+          });
+        }
+        return next;
+      });
+    }
+  }, [chosenClass, freezeRewardShown, levelRewardShown]);
 
   const consumeEnergy = useCallback(
     async (mode: GameMode): Promise<boolean> => {
@@ -339,7 +410,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setCurrentSession(null);
     const fresh: EnergyData = { energy: MAX_ENERGY, lastRegenTime: Date.now() };
     setEnergyData(fresh);
-    await AsyncStorage.multiRemove([STORAGE_KEY_SESSIONS, STORAGE_KEY_ENERGY]);
+    await AsyncStorage.multiRemove([STORAGE_KEY_SESSIONS, STORAGE_KEY_ENERGY, STORAGE_KEY_COMPETITION_DAYS, STORAGE_KEY_FREEZE_REWARD_SHOWN, STORAGE_KEY_CLASS_XP, STORAGE_KEY_LEVEL_REWARD_SHOWN]);
+    setClassXp({ ...DEFAULT_CLASS_XP });
+  }, []);
+
+  const resetGameData = useCallback(async () => {
+    setSessions([]);
+    setCurrentSession(null);
+    const fresh: EnergyData = { energy: MAX_ENERGY, lastRegenTime: Date.now() };
+    setEnergyData(fresh);
+    await AsyncStorage.multiRemove([STORAGE_KEY_SESSIONS, STORAGE_KEY_ENERGY, STORAGE_KEY_COMPETITION_DAYS, STORAGE_KEY_FREEZE_REWARD_SHOWN, STORAGE_KEY_CLASS_XP, STORAGE_KEY_LEVEL_REWARD_SHOWN]);
+    setClassXp({ ...DEFAULT_CLASS_XP });
   }, []);
 
   const getPersonalBest = useCallback((): number => {
@@ -377,7 +458,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       let readings = 0;
       for (const session of competitionSessions) {
         const score = session.scores[dimension];
-        if (typeof score === "number" && Number.isFinite(score) && score > 0) {
+        if (typeof score === "number" && Number.isFinite(score)) {
           total += score;
           readings += 1;
         }
@@ -392,7 +473,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return weakest;
   }, [sessions]);
 
-  const streak = useMemo(() => computeStreak(sessions), [sessions]);
+  const streak = useMemo(
+    () => computeStreakAndFreezes(competitionDays, toDateStr(Date.now())),
+    [competitionDays],
+  );
+  const dismissStreakReward = useCallback(() => setStreakReward(null), []);
+  const classLevels = useMemo(
+    () => ({ assassin: levelForXp(classXp.assassin), rider: levelForXp(classXp.rider), trickster: levelForXp(classXp.trickster) }),
+    [classXp],
+  );
 
   return (
     <GameContext.Provider
@@ -403,6 +492,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         maxEnergy: MAX_ENERGY,
         nextRegenMs,
         streak,
+        streakReward,
+        dismissStreakReward,
+        classXp,
+        classLevels,
         setCurrentSession,
         saveSession,
         consumeEnergy,
@@ -414,6 +507,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         getWeakestDimension,
         devSetEnergy,
         devResetGame,
+        resetGameData,
       }}
     >
       {children}

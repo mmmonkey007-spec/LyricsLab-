@@ -1,6 +1,8 @@
 import { router } from "expo-router";
 import React, { useMemo } from "react";
 import {
+  Alert,
+  ActivityIndicator,
   Image,
   Pressable,
   ScrollView,
@@ -15,9 +17,13 @@ import { useAuth } from "@/context/AuthContext";
 import { isCompetitionSession, useGame } from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
+import { deleteAccount } from "@/services/api";
+import { clearLocalAppData } from "@/services/localData";
 import { CLASS_META } from "@/services/classMeta";
 import RankEmblem from "@/components/RankEmblem";
 import ClassMark from "@/components/ClassMark";
+import { StreakFlame } from "@/components/StreakFlame";
+import { SkillTreePanel } from "@/components/SkillTreePanel";
 import {
   breakEvenFor,
   formatPercent,
@@ -32,11 +38,16 @@ const toDateStr = (ts: number) => new Date(ts).toISOString().slice(0, 10);
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { sessions, streak, getImprovementTrend } = useGame();
+  const { sessions, streak, getImprovementTrend, classXp, classLevels } = useGame();
   const { chosenClass } = useOnboarding();
-  const { username, isGuest } = useAuth();
+  const { username, isGuest, session, signOut } = useAuth();
+  const { resetGameData } = useGame();
+  const { resetOnboarding } = useOnboarding();
+  const [accountAction, setAccountAction] = React.useState<"delete" | "reset" | null>(null);
+  const [accountError, setAccountError] = React.useState<string | null>(null);
 
   const meta = chosenClass ? CLASS_META[chosenClass] : null;
+  const heroClass = chosenClass === "assassin" || chosenClass === "rider" || chosenClass === "trickster" ? chosenClass : null;
 
   // ── The ladder, replayed from stored battles ──────────────────────────────
   // Rank is derived rather than stored so it can never drift from the record
@@ -74,17 +85,75 @@ export default function ProfileScreen() {
   // Ruled: an interface never shows a state it is about to withdraw. If today
   // has no session the streak is AT RISK and says so, rather than displaying an
   // intact count on the exact day it dies.
-  const playedToday = useMemo(() => {
-    const today = toDateStr(Date.now());
-    return sessions.some((s) => isCompetitionSession(s) && toDateStr(s.timestamp) === today);
-  }, [sessions]);
-  const playedYesterday = useMemo(() => {
-    const yday = toDateStr(Date.now() - DAY_MS);
-    return sessions.some((s) => isCompetitionSession(s) && toDateStr(s.timestamp) === yday);
-  }, [sessions]);
-  const streakAtRisk = streak.currentStreak > 0 && !playedToday && playedYesterday;
+  // The at-risk truth is computed once, on the streak data itself, so every
+  // surface that renders a streak renders the same verdict. It used to be
+  // computed here and nowhere else, which left two other screens showing an
+  // intact count on the exact day the run dies.
+  const { atRisk: streakAtRisk, playedToday } = streak;
 
   const trend = getImprovementTrend();
+
+  const clearLocalDataAndReset = async () => {
+    await Promise.all([resetGameData(), resetOnboarding()]);
+    await clearLocalAppData();
+  };
+
+  const handleResetLocalData = () => {
+    Alert.alert(
+      "Reset local data?",
+      "This deletes the guest progress saved on this device, including written lyrics, scores, energy, and onboarding progress. This cannot be recovered.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset local data",
+          style: "destructive",
+          onPress: async () => {
+            setAccountError(null);
+            setAccountAction("reset");
+            try {
+              await clearLocalDataAndReset();
+            } catch {
+              setAccountError("We could not reset local data. Please try again.");
+            } finally {
+              setAccountAction(null);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      "Delete account permanently?",
+      "Your account, username, all written lyrics, battle history, scores, and streak will be permanently deleted and cannot be recovered.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete permanently",
+          style: "destructive",
+          onPress: async () => {
+            if (!session?.access_token) {
+              setAccountError("Please sign in again before deleting your account.");
+              return;
+            }
+            setAccountError(null);
+            setAccountAction("delete");
+            try {
+              await deleteAccount(session.access_token);
+              await clearLocalDataAndReset();
+              await signOut();
+              router.replace("/auth");
+            } catch (error) {
+              setAccountError(error instanceof Error ? error.message : "We could not delete the account. Please try again.");
+            } finally {
+              setAccountAction(null);
+            }
+          },
+        },
+      ],
+    );
+  };
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
@@ -130,6 +199,26 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.cardLabel, { color: colors.mutedForeground }]}>LEVEL</Text>
+          <Text style={[styles.rankName, { color: colors.text }]}>{meta?.name ?? "Current class"} · Level {heroClass ? classLevels[heroClass] : 1}</Text>
+          {heroClass && classLevels[heroClass] >= 14 ? (
+            <>
+              <Text style={[styles.cardFoot, { color: colors.mutedForeground }]}>Level 15 checkpoint — coming soon. Your XP keeps counting.</Text>
+              <Text style={[styles.cardFoot, { color: colors.mutedForeground }]}>Banked XP {classXp[heroClass].toLocaleString()}</Text>
+            </>
+          ) : heroClass ? (
+            <View style={[styles.pointsTrack, { backgroundColor: colors.border }]}>
+              <View style={[styles.pointsFill, { backgroundColor: meta?.accentColor ?? colors.primary, width: `${Math.min(100, (classXp[heroClass] - 50 * classLevels[heroClass] * (classLevels[heroClass] - 1)) / (100 * classLevels[heroClass]) * 100)}%` }]} />
+            </View>
+          ) : null}
+        </View>
+
+        <SkillTreePanel
+          currentClass={chosenClass === "rider" || chosenClass === "trickster" ? chosenClass : "assassin"}
+          currentLevel={heroClass ? classLevels[heroClass] : 1}
+        />
 
         {/* Rank — the win rate is the bragging-rights anchor */}
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -181,10 +270,15 @@ export default function ProfileScreen() {
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.cardLabel, { color: colors.mutedForeground }]}>STREAK</Text>
           <View style={styles.rankLine}>
+            <StreakFlame count={streak.currentStreak} atRisk={streakAtRisk} playedToday={playedToday} frosted={streak.frosted} size={30} />
             <Text style={[styles.rankName, { color: colors.text }]}>
               {streak.currentStreak} day{streak.currentStreak === 1 ? "" : "s"}
             </Text>
-            {streakAtRisk ? (
+            {streak.freezeWillCoverToday ? (
+              <View style={styles.riskPill}>
+                <Text style={styles.riskPillText}>FREEZE WILL COVER TODAY</Text>
+              </View>
+            ) : streakAtRisk ? (
               <View style={styles.riskPill}>
                 <Text style={styles.riskPillText}>AT RISK TODAY</Text>
               </View>
@@ -193,6 +287,9 @@ export default function ProfileScreen() {
           <Text style={[styles.cardFoot, { color: colors.mutedForeground }]}>
             Longest {streak.longestStreak}
             {streakAtRisk ? " · write today or it resets to 1" : playedToday ? " · today is banked" : ""}
+          </Text>
+          <Text style={[styles.cardFoot, { color: colors.mutedForeground }]}>
+            Freezes {streak.freezesHeld} / 2
           </Text>
         </View>
 
@@ -217,6 +314,40 @@ export default function ProfileScreen() {
             See the full breakdown →
           </Text>
         </Pressable>
+
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.cardLabel, { color: colors.mutedForeground }]}>ACCOUNT</Text>
+          <Pressable onPress={() => router.push("/privacy")} style={styles.accountRow}>
+            <Text style={[styles.accountLink, { color: colors.text }]}>Privacy Policy</Text>
+            <Text style={[styles.accountArrow, { color: colors.mutedForeground }]}>→</Text>
+          </Pressable>
+          {isGuest ? (
+            <Pressable
+              onPress={handleResetLocalData}
+              disabled={accountAction !== null}
+              style={[styles.accountButton, { borderColor: colors.red }]}
+            >
+              {accountAction === "reset" ? (
+                <ActivityIndicator color={colors.red} />
+              ) : (
+                <Text style={[styles.accountButtonText, { color: colors.red }]}>Reset local data</Text>
+              )}
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={handleDeleteAccount}
+              disabled={accountAction !== null}
+              style={[styles.accountButton, { borderColor: colors.red }]}
+            >
+              {accountAction === "delete" ? (
+                <ActivityIndicator color={colors.red} />
+              ) : (
+                <Text style={[styles.accountButtonText, { color: colors.red }]}>Delete account</Text>
+              )}
+            </Pressable>
+          )}
+          {accountError ? <Text style={[styles.accountError, { color: colors.red }]}>{accountError}</Text> : null}
+        </View>
       </ScrollView>
     </View>
   );
@@ -274,4 +405,10 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   riskPillText: { color: "#F87171", fontSize: 10, fontWeight: "700", letterSpacing: 0.6 },
+  accountRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 4 },
+  accountLink: { fontSize: 15, fontWeight: "600" },
+  accountArrow: { fontSize: 18 },
+  accountButton: { minHeight: 44, borderWidth: 1, borderRadius: 10, alignItems: "center", justifyContent: "center", paddingHorizontal: 12 },
+  accountButtonText: { fontSize: 14, fontWeight: "700" },
+  accountError: { fontSize: 13, lineHeight: 18 },
 });

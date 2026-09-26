@@ -4,6 +4,8 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { apiRateLimiter } from "./middlewares/rate-limit";
+import { PRIVACY_POLICY_HTML } from "./privacy-policy";
+import { isPrelaunchMode } from "./middlewares/prelaunch";
 
 const app: Express = express();
 
@@ -36,9 +38,15 @@ app.use(
     },
   }),
 );
+app.use((_req, res, next) => {
+  if (isPrelaunchMode()) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+  next();
+});
 app.use(
   cors({
-    credentials: true,
+    credentials: false,
     origin(origin, callback) {
       if (!origin || !isProduction || allowedOrigins.has(origin)) {
         callback(null, true);
@@ -49,8 +57,11 @@ app.use(
     },
   }),
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "16kb" }));
+
+app.get("/privacy", (_req, res) => {
+  res.type("html").send(PRIVACY_POLICY_HTML);
+});
 
 app.use("/api", apiRateLimiter, router);
 

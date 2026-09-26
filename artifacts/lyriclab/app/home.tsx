@@ -16,12 +16,13 @@ import { useStartBotBattle } from "@workspace/api-client-react";
 import { BoomboxIcon } from "@/components/BoomboxIcon";
 import { CourtCharacters } from "@/components/CourtCharacters";
 import { DevPanel } from "@/components/DevPanel";
+import { GuestVerificationSheet } from "@/components/GuestVerificationSheet";
 import { InlineIcon } from "@/components/InlineIcon";
 import { useAuth } from "@/context/AuthContext";
 import { useGame } from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
-import { getPrompt } from "@/services/api";
+import { battleErrorMessage, getPrompt, isGuestQuotaMessage } from "@/services/api";
 import { useSound } from "@/context/SoundContext";
 
 export default function HomeScreen() {
@@ -29,11 +30,12 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { energy, maxEnergy, nextRegenMs, getPersonalBest, getAverageScore } = useGame();
   const { currentQuest, chosenClass, isOnboarding } = useOnboarding();
-  const { user, username, isGuest, signOut } = useAuth();
+  const { user, username, isGuest, session, signOut } = useAuth();
   const startBotBattleMutation = useStartBotBattle();
   const { playScratch, playBgMusic, stopBgMusicFade } = useSound();
   const [loadingMode, setLoadingMode] = useState<"prompted" | "blitz" | "battle" | null>(null);
   const [devPanelVisible, setDevPanelVisible] = useState(false);
+  const [guestVerificationVisible, setGuestVerificationVisible] = useState(false);
 
   const personalBest = getPersonalBest();
   const averageScore = getAverageScore();
@@ -111,12 +113,10 @@ export default function HomeScreen() {
     }
   };
 
-  const handleBattle = async () => {
+  const startBattle = useCallback(async () => {
     setLoadingMode("battle");
-    playScratch();
-    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     try {
-      const battle = await startBotBattleMutation.mutateAsync();
+      const battle = await startBotBattleMutation.mutateAsync({});
       router.push({
         pathname: "/write",
         params: {
@@ -126,11 +126,33 @@ export default function HomeScreen() {
           botName: battle.botName,
         },
       });
-    } catch {
-      Alert.alert("Battle unavailable", "We couldn't assign a topical word right now. Please try again.");
+    } catch (error) {
+      const message = battleErrorMessage(error);
+      const status = error && typeof error === "object" && typeof (error as { status?: unknown }).status === "number"
+        ? (error as { status: number }).status
+        : null;
+      const buttons = status === 401 || (status === 429 && (isGuest || isGuestQuotaMessage(message)))
+        ? [
+            { text: "Not now", style: "cancel" as const },
+            { text: "Sign up", onPress: () => router.replace("/auth") },
+          ]
+        : [{ text: "OK" }];
+      Alert.alert(status === 401 ? "Sign in required" : "Guest play", message, buttons);
     } finally {
       setLoadingMode(null);
     }
+  }, [isGuest, startBotBattleMutation]);
+
+  const handleBattle = async () => {
+    setLoadingMode("battle");
+    playScratch();
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (isGuest && !session) {
+      setLoadingMode(null);
+      setGuestVerificationVisible(true);
+      return;
+    }
+    void startBattle();
   };
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -202,6 +224,15 @@ export default function HomeScreen() {
         onPrompted={handlePrompted}
         onBlitz={handleBlitz}
         onBattle={handleBattle}
+      />
+
+      <GuestVerificationSheet
+        visible={guestVerificationVisible}
+        onClose={() => setGuestVerificationVisible(false)}
+        onVerified={() => {
+          setGuestVerificationVisible(false);
+          void startBattle();
+        }}
       />
 
       <View style={[styles.statsRow, { backgroundColor: colors.surface }]}>

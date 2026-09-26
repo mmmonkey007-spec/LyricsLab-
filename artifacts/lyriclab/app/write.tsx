@@ -31,19 +31,33 @@ import {
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useSound } from "@/context/SoundContext";
 import { InlineIcon } from "@/components/InlineIcon";
+import { GuestVerificationSheet } from "@/components/GuestVerificationSheet";
 import type { BgMode } from "@/context/SoundContext";
 import { useColors } from "@/hooks/useColors";
-import { computeQuickStats, hydrateLineBreakdown, scoreLyrics } from "@/services/api";
+import {
+  apiErrorStatus,
+  battleErrorMessage,
+  chooseBattleTopic,
+  computeQuickStats,
+  hydrateLineBreakdown,
+  isGuestQuotaMessage,
+  scoreLyrics,
+  SIGN_IN_TO_PLAY_ERROR,
+  SIGN_IN_TO_SCORE_ERROR,
+  rerollBattleTopics,
+} from "@/services/api";
 import type { GameMode, GameSession } from "@/context/GameContext";
 import { pickHintPhrase, suggestRhymes, isValidRhymePair } from "@/utils/rhymes";
 import { DevPanel } from "@/components/DevPanel";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/services/supabase";
 
 const TRAIN_AREA_LABELS: Record<string, string> = {
   rhyme:        "Rhyme Game",
   flow:         "Flow & Rhythm",
   wordplay:     "Wordplay",
   originality:  "Originality",
-  technique:    "Technique",
+  storytelling: "Storytelling",
   humor:        "Humour",
 };
 
@@ -81,6 +95,9 @@ export default function WriteScreen() {
     battleId?: string;
     topicalWord?: string;
     botName?: string;
+    tier?: string;
+    storyStep?: string;
+    storyReturn?: string;
     exercise?: string;
     trainArea?: string;
   }>();
@@ -89,6 +106,10 @@ export default function WriteScreen() {
   const prompt = params.prompt;
   const exercise = params.exercise;
   const trainArea = params.trainArea;
+  const battleTier =
+    params.tier === "silver" || params.tier === "gold" || params.tier === "master"
+      ? params.tier
+      : "bronze";
 
   const {
     energy,
@@ -97,7 +118,8 @@ export default function WriteScreen() {
     setCurrentSession,
     getWeakestDimension,
   } = useGame();
-  const { isOnboarding, currentQuest, completeQuest } = useOnboarding();
+  const { isOnboarding, currentQuest, completeQuest, chosenClass } = useOnboarding();
+  const { isGuest, session } = useAuth();
   const { playTap, playMiss, playBgMusic, stopBgMusicFade } = useSound();
   const startBotBattleMutation = useStartBotBattle();
   const submitBotBattleVerseMutation = useSubmitBotBattleVerse();
@@ -123,14 +145,20 @@ export default function WriteScreen() {
     topicalWord: string;
     tier: "bronze" | "silver" | "gold" | "master";
     botName: string;
+    topics: string[];
+    onFireWords: string[];
+    rerollsLeft: number;
   } | null>(() => {
     const id = Number(params.battleId);
     if (!Number.isInteger(id) || id <= 0 || !params.topicalWord) return null;
     return {
       id,
       topicalWord: params.topicalWord,
-      tier: "bronze",
+      tier: battleTier,
       botName: params.botName ?? "Beef",
+      topics: [],
+      onFireWords: [],
+      rerollsLeft: 1,
     };
   });
   const [timeLeft, setTimeLeft] = useState<number | null>(
@@ -152,10 +180,12 @@ export default function WriteScreen() {
   const hintDismissedAtRef = useRef<number | null>(null);
   const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const battleStartRequestedRef = useRef(false);
+  const pendingGuestSubmitRef = useRef<boolean | null>(null);
 
   const [showHint, setShowHint] = useState(false);
   const [currentHint, setCurrentHint] = useState<string | null>(null);
   const [devPanelVisible, setDevPanelVisible] = useState(false);
+  const [guestVerificationVisible, setGuestVerificationVisible] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -173,24 +203,63 @@ export default function WriteScreen() {
   // server-assigned topical word from the database.
   useEffect(() => {
     if (mode !== "battle" || battle || battleStartRequestedRef.current) return;
+    if (isGuest && !session) {
+      setGuestVerificationVisible(true);
+      return;
+    }
     battleStartRequestedRef.current = true;
     setBattlePhase("preparing");
     startBotBattleMutation
-      .mutateAsync()
+      .mutateAsync({ data: {} })
       .then((started) => {
+        const data = started as typeof started & { topics?: string[]; onFireWords?: string[]; rerollsLeft?: number };
         setBattle({
           id: started.id,
           topicalWord: started.topicalWord,
           tier: started.tier,
           botName: started.botName,
+          topics: data.topics ?? [],
+          onFireWords: data.onFireWords ?? [],
+          rerollsLeft: data.rerollsLeft ?? 1,
         });
       })
-      .catch(() => {
-        Alert.alert("Battle unavailable", "We couldn't assign a topical word right now. Please try again.");
+      .catch((error) => {
+        const status = apiErrorStatus(error);
+        const message = battleErrorMessage(error);
+        Alert.alert(
+          status === 401 ? "Sign in required" : "Guest play",
+          message,
+          status === 401 || (status === 429 && (isGuest || isGuestQuotaMessage(message)))
+            ? [
+                { text: "Not now", style: "cancel" },
+                { text: "Sign up", onPress: () => router.replace("/auth") },
+              ]
+            : [{ text: "OK" }],
+        );
         router.back();
       })
       .finally(() => setBattlePhase("idle"));
-  }, [battle, mode, startBotBattleMutation]);
+  }, [battle, chosenClass, isGuest, mode, session, startBotBattleMutation]);
+
+  const selectBattleTopic = useCallback(async (topic: string) => {
+    if (!battle || topic === battle.topicalWord) return;
+    try {
+      await chooseBattleTopic(battle.id, topic);
+      setBattle((current) => current ? { ...current, topicalWord: topic } : current);
+    } catch (error) {
+      Alert.alert("Topic unavailable", error instanceof Error ? error.message : "Choose another topic.");
+    }
+  }, [battle]);
+
+  const rerollBattle = useCallback(async () => {
+    if (!battle || battle.rerollsLeft < 1) return;
+    try {
+      const rerolled = await rerollBattleTopics(battle.id);
+      setBattle((current) => current ? { ...current, topics: rerolled.topics, topicalWord: rerolled.topics[0] ?? current.topicalWord, rerollsLeft: rerolled.rerollsLeft } : current);
+    } catch (error) {
+      Alert.alert("No re-rolls left", error instanceof Error ? error.message : "This battle cannot be re-rolled.");
+    }
+  }, [battle]);
 
   const handleSubmit = useCallback(
     async (isAuto = false) => {
@@ -225,6 +294,17 @@ export default function WriteScreen() {
         return;
       }
 
+      if (isGuest) {
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+        if (!currentSession) {
+          pendingGuestSubmitRef.current = isAuto;
+          setGuestVerificationVisible(true);
+          return;
+        }
+      }
+
       if (timerRef.current) clearInterval(timerRef.current);
       setTimerActive(false);
       setSubmitting(true);
@@ -240,7 +320,7 @@ export default function WriteScreen() {
             battleId: battle.id,
             data: { verse: currentLyrics },
           });
-          const completedBattle = await endBotBattleMutation.mutateAsync({ battleId: submittedBattle.id });
+           const completedBattle = await endBotBattleMutation.mutateAsync({ battleId: submittedBattle.id });
           const battleResult = completedBattle.result;
           if (!battleResult) throw new Error("Battle judge returned no result.");
           await consumeEnergy(mode);
@@ -282,7 +362,7 @@ export default function WriteScreen() {
               flowRhythm: battleResult.playerDimensionScores.flowScore,
               wordplay: battleResult.playerDimensionScores.wordplayScore,
               originality: battleResult.playerDimensionScores.originalityScore,
-              technique: battleResult.playerDimensionScores.techniqueScore,
+              storytelling: battleResult.playerDimensionScores.storytellingScore,
               humorCraft: battleResult.playerDimensionScores.humorScore,
             },
             bestLine: playerLineBreakdown?.find((line) => line.is_critical)?.text ?? "",
@@ -291,7 +371,7 @@ export default function WriteScreen() {
             coachNote: battleResult.verdict,
             weakestDimension: "",
             microExercise: "",
-            finalScore: battleResult.playerRelativeScore,
+             finalScore: battleResult.playerFinalScore ?? battleResult.playerRelativeScore,
             preAnalysis,
             breakdown: { baseScore: 0, wordBonus: 0, lineBonus: 0, multiSyllabicBonus: 0 },
             battleOpponentLyrics: completedBattle.botResponse ?? "",
@@ -301,12 +381,14 @@ export default function WriteScreen() {
             battleVerdict: battleResult.verdict,
             battlePlayerRelativeScore: battleResult.playerRelativeScore,
             battleOpponentRelativeScore: battleResult.opponentRelativeScore,
+             battlePlayerFinalScore: battleResult.playerFinalScore,
+             battleOpponentFinalScore: battleResult.opponentFinalScore,
             battlePlayerDimScores: {
               rhymeQuality: battleResult.playerDimensionScores.rhymeScore,
               flowRhythm: battleResult.playerDimensionScores.flowScore,
               wordplay: battleResult.playerDimensionScores.wordplayScore,
               originality: battleResult.playerDimensionScores.originalityScore,
-              technique: battleResult.playerDimensionScores.techniqueScore,
+              storytelling: battleResult.playerDimensionScores.storytellingScore,
               humorCraft: battleResult.playerDimensionScores.humorScore,
             },
             battleOpponentDimScores: {
@@ -314,7 +396,7 @@ export default function WriteScreen() {
               flowRhythm: battleResult.opponentDimensionScores.flowScore,
               wordplay: battleResult.opponentDimensionScores.wordplayScore,
               originality: battleResult.opponentDimensionScores.originalityScore,
-              technique: battleResult.opponentDimensionScores.techniqueScore,
+              storytelling: battleResult.opponentDimensionScores.storytellingScore,
               humorCraft: battleResult.opponentDimensionScores.humorScore,
             },
             botBattleId: completedBattle.id,
@@ -326,11 +408,18 @@ export default function WriteScreen() {
 
           setBattlePhase("idle");
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          router.replace("/battle-result");
+          if (params.storyStep) {
+            router.replace({
+              pathname: "/battle-result",
+              params: { storyStep: params.storyStep, battleId: String(battle.id) },
+            });
+          } else {
+            router.replace("/battle-result");
+          }
         } else {
           // ── Standard scoring flow ────────────────────────────────────────
           const quickStats = computeQuickStats(currentLyrics);
-          const result = await scoreLyrics(currentLyrics, quickStats);
+          const result = await scoreLyrics(currentLyrics, quickStats, mode, prompt);
 
           await consumeEnergy(mode);
 
@@ -360,18 +449,66 @@ export default function WriteScreen() {
             const lc = currentLyrics.split("\n").filter((l) => l.trim().length > 0).length;
             if (lc >= 4) completeQuest(1);
           }
-          router.replace("/result");
+          if (params.storyReturn === "1") {
+            router.replace({ pathname: "/result", params: { storyReturn: "1" } });
+          } else {
+            router.replace("/result");
+          }
         }
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         console.error("[LyricLab] submit failed:", msg);
         setBattlePhase("idle");
         setSubmitting(false);
-        Alert.alert("Error", msg.length > 8 ? msg : "Could not score lyrics. Check your connection and try again.");
+        const status = apiErrorStatus(err);
+        if (msg === SIGN_IN_TO_SCORE_ERROR || msg === SIGN_IN_TO_PLAY_ERROR || status === 401) {
+          Alert.alert("Sign in required", msg, [
+            { text: "Cancel", style: "cancel" },
+            { text: "Sign up", onPress: () => router.replace("/auth") },
+          ]);
+        } else if (isGuestQuotaMessage(msg) || (mode === "battle" && status === 429)) {
+          Alert.alert("Guest play limit", battleErrorMessage(err), [
+            { text: "Not now", style: "cancel" },
+            { text: "Sign up", onPress: () => router.replace("/auth") },
+          ]);
+        } else {
+          Alert.alert("Error", msg.length > 8 ? msg : "Could not score lyrics. Check your connection and try again.");
+        }
       }
     },
-    [lyrics, mode, prompt, battle, energy, consumeEnergy, setCurrentSession, isOnboarding, currentQuest, completeQuest, submitBotBattleVerseMutation, endBotBattleMutation]
+    [
+      lyrics,
+      mode,
+      prompt,
+      battle,
+      energy,
+      consumeEnergy,
+      setCurrentSession,
+      isOnboarding,
+      currentQuest,
+      completeQuest,
+      submitBotBattleVerseMutation,
+      endBotBattleMutation,
+      params.storyStep,
+      params.storyReturn,
+      isGuest,
+    ]
   );
+
+  const handleGuestVerificationClose = useCallback(() => {
+    pendingGuestSubmitRef.current = null;
+    setGuestVerificationVisible(false);
+    if (mode === "battle" && !battle) router.back();
+  }, [battle, mode]);
+
+  const handleGuestVerified = useCallback(() => {
+    setGuestVerificationVisible(false);
+    const pendingSubmit = pendingGuestSubmitRef.current;
+    pendingGuestSubmitRef.current = null;
+    if (pendingSubmit !== null) {
+      void handleSubmit(pendingSubmit);
+    }
+  }, [handleSubmit]);
 
   // Record wall-clock start time once when a timed session mounts
   useEffect(() => {
@@ -672,12 +809,18 @@ export default function WriteScreen() {
         {mode === "battle" && battle && (
           <View style={[styles.contextBanner, { backgroundColor: colors.red + "22" }]}>
             <InlineIcon name="crosshair" size={13} color={colors.red} />
-            <Text style={[styles.battleWordText, { color: colors.red }]}>
-              {battle.topicalWord.toUpperCase()}
-            </Text>
+            <View style={styles.topicRow}>
+              {(battle.topics.length ? battle.topics : [battle.topicalWord]).map((topic) => (
+                <TouchableOpacity key={topic} onPress={() => void selectBattleTopic(topic)} style={[styles.topicChip, { borderColor: topic === battle.topicalWord ? colors.red : colors.border }]}>
+                  <Text style={[styles.battleWordText, { color: colors.red }]}>{topic}</Text>
+                </TouchableOpacity>
+              ))}
+              {battle.rerollsLeft > 0 ? <TouchableOpacity onPress={() => void rerollBattle()}><Text style={[styles.contextText, { color: colors.red }]}>1 re-roll left</Text></TouchableOpacity> : null}
+            </View>
             <Text style={[styles.contextText, { color: colors.textMuted }]}>
-              — answer the word. Beef is listening.
+              — choose a topic. Beef is listening.
             </Text>
+            {battle.onFireWords.length > 0 ? <Text style={[styles.contextText, { color: colors.accent }]}>🔥 {battle.onFireWords.join(" · ")}</Text> : null}
           </View>
         )}
 
@@ -852,6 +995,12 @@ export default function WriteScreen() {
           onForceHint={handleForceHint}
         />
       )}
+
+      <GuestVerificationSheet
+        visible={guestVerificationVisible}
+        onClose={handleGuestVerificationClose}
+        onVerified={handleGuestVerified}
+      />
     </View>
   );
 }
@@ -912,6 +1061,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "800",
     letterSpacing: 1,
+  },
+  topicRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    flexWrap: "wrap",
+  },
+  topicChip: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    maxWidth: "72%",
   },
   battleWordSep: {
     fontSize: 12,

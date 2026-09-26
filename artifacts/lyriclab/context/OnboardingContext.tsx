@@ -47,6 +47,7 @@ interface OnboardingContextType extends PersistedOnboarding {
   completeMainQuest: (quest: MainQuestNumber) => void;
   devSetOnboardingState: (partial: Partial<PersistedOnboarding>) => void;
   devResetOnboarding: () => void;
+  resetOnboarding: () => Promise<void>;
   devForceOGUnlock: () => void;
 }
 
@@ -260,6 +261,14 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     AsyncStorage.removeItem(STORAGE_KEY_OG_WALKTHROUGH).catch(() => {});
   }, []);
 
+  const resetOnboarding = useCallback(async () => {
+    setPersisted(DEFAULT_PERSISTED);
+    setRewardQueue([]);
+    setOgEverUnlocked(false);
+    setOgWalkthroughSeenState(false);
+    await AsyncStorage.multiRemove([STORAGE_KEY, STORAGE_KEY_OG_UNLOCKED, STORAGE_KEY_OG_WALKTHROUGH]);
+  }, []);
+
   const devForceOGUnlock = useCallback(() => {
     setOgEverUnlocked(true);
     AsyncStorage.setItem(STORAGE_KEY_OG_UNLOCKED, "true").catch(() => {});
@@ -293,6 +302,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
         completeMainQuest,
         devSetOnboardingState,
         devResetOnboarding,
+        resetOnboarding,
         devForceOGUnlock,
       }}
     >

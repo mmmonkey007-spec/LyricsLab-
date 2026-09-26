@@ -12,6 +12,7 @@ export type InlineIconName =
   | "chevron-left"
   | "chevron-right"
   | "award"
+  | "star"
   | "log-in"
   | "alert-circle"
   | "x"
@@ -71,6 +72,7 @@ const ICON_PATHS: Record<InlineIconName, string[]> = {
     "M12 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14z",
     "M8.21 13.89L7 23l5-3 5 3-1.21-9.12",
   ],
+  star: ["M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3z"],
   "log-in": [
     "M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4",
     "M10 17l5-5-5-5",

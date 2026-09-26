@@ -1,16 +1,17 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import {
-  Animated,
   Platform,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withSpring, withTiming } from "react-native-reanimated";
 import type { QuestReward } from "@/context/OnboardingContext";
 import { InlineIcon } from "@/components/InlineIcon";
 import type { InlineIconName } from "@/components/InlineIcon";
 import { useColors } from "@/hooks/useColors";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 interface RewardPopupProps {
   reward: QuestReward;
@@ -18,34 +19,61 @@ interface RewardPopupProps {
   autoDismissMs?: number;
 }
 
-export function RewardPopup({ reward, onDismiss, autoDismissMs = 2500 }: RewardPopupProps) {
-  const colors = useColors();
-  const overlayAnim = useRef(new Animated.Value(0)).current;
-  const cardAnim = useRef(new Animated.Value(0.85)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
-  const itemAnims = useRef(reward.items.map(() => new Animated.Value(0))).current;
+function RewardItem({
+  item,
+  index,
+  reducedMotion,
+  colors,
+}: {
+  item: QuestReward["items"][number];
+  index: number;
+  reducedMotion: boolean;
+  colors: ReturnType<typeof useColors>;
+}) {
+  const progress = useSharedValue(0);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(overlayAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
-      Animated.spring(cardAnim, { toValue: 1, friction: 7, useNativeDriver: true }),
-      Animated.timing(cardOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-    ]).start(() => {
-      Animated.stagger(
-        100,
-        itemAnims.map((a) =>
-          Animated.spring(a, { toValue: 1, friction: 8, useNativeDriver: true })
-        )
-      ).start();
-    });
+    progress.value = reducedMotion
+      ? 1
+      : withDelay(index * 100, withSpring(1, { damping: 14, stiffness: 180 }));
+  }, [index, progress, reducedMotion]);
+
+  const itemStyle = useAnimatedStyle(() => ({
+    opacity: progress.value,
+    transform: [{ translateY: (1 - progress.value) * 16 }],
+  }));
+
+  return (
+    <Animated.View style={[styles.rewardRow, itemStyle]}>
+      <View style={[styles.iconWrap, { backgroundColor: colors.accent + "22" }]}>
+        <InlineIcon name={item.icon as InlineIconName} size={14} color={colors.accent} />
+      </View>
+      <Text style={[styles.rewardLabel, { color: colors.text }]}>{item.label}</Text>
+    </Animated.View>
+  );
+}
+
+export function RewardPopup({ reward, onDismiss, autoDismissMs = 2500 }: RewardPopupProps) {
+  const colors = useColors();
+  const reducedMotion = useReducedMotion();
+  const overlayAnim = useSharedValue(0);
+  const cardAnim = useSharedValue(0.85);
+  const cardOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    overlayAnim.value = reducedMotion ? 1 : withTiming(1, { duration: 220 });
+    cardAnim.value = reducedMotion ? 1 : withSpring(1, { damping: 14, stiffness: 180 });
+    cardOpacity.value = reducedMotion ? 1 : withTiming(1, { duration: 220 });
 
     const timer = setTimeout(onDismiss, autoDismissMs);
     return () => clearTimeout(timer);
-  }, []);
+  }, [reducedMotion, overlayAnim, cardAnim, cardOpacity]);
+  const overlayStyle = useAnimatedStyle(() => ({ opacity: overlayAnim.value }));
+  const cardStyle = useAnimatedStyle(() => ({ transform: [{ scale: cardAnim.value }], opacity: cardOpacity.value }));
 
   return (
     <TouchableWithoutFeedback onPress={onDismiss}>
-      <Animated.View style={[styles.overlay, { opacity: overlayAnim }]}>
+      <Animated.View style={[styles.overlay, overlayStyle]}>
         <TouchableWithoutFeedback>
           <Animated.View
             style={[
@@ -53,10 +81,9 @@ export function RewardPopup({ reward, onDismiss, autoDismissMs = 2500 }: RewardP
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.accent + "55",
-                transform: [{ scale: cardAnim }],
-                opacity: cardOpacity,
-              },
-            ]}
+               },
+               cardStyle,
+             ]}
           >
             <View style={[styles.topStrip, { backgroundColor: colors.accent + "22" }]}>
               <Text style={[styles.questComplete, { color: colors.accent }]}>
@@ -75,34 +102,13 @@ export function RewardPopup({ reward, onDismiss, autoDismissMs = 2500 }: RewardP
 
             <View style={styles.rewardList}>
               {reward.items.map((item, i) => (
-                <Animated.View
+                <RewardItem
                   key={i}
-                  style={[
-                    styles.rewardRow,
-                    {
-                      opacity: itemAnims[i],
-                      transform: [
-                        {
-                          translateY: (itemAnims[i] ?? new Animated.Value(0)).interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [16, 0],
-                          }),
-                        },
-                      ],
-                    },
-                  ]}
-                >
-                  <View style={[styles.iconWrap, { backgroundColor: colors.accent + "22" }]}>
-                    <InlineIcon
-                      name={item.icon as InlineIconName}
-                      size={14}
-                      color={colors.accent}
-                    />
-                  </View>
-                  <Text style={[styles.rewardLabel, { color: colors.text }]}>
-                    {item.label}
-                  </Text>
-                </Animated.View>
+                  item={item}
+                  index={i}
+                  reducedMotion={reducedMotion}
+                  colors={colors}
+                />
               ))}
             </View>
 

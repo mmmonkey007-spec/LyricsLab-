@@ -2,6 +2,7 @@ import * as Haptics from "expo-haptics";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
+  Alert,
   Modal,
   Platform,
   StatusBar,
@@ -17,7 +18,7 @@ import type { PlayerClass } from "@/context/OnboardingContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 import { useSound } from "@/context/SoundContext";
-import { syncClass } from "@/services/supabaseSync";
+import { useUpdatePlayerClass } from "@workspace/api-client-react";
 import { RadarChart, CLASS_RADAR_STATS, CLASS_RADAR_COLORS } from "@/components/RadarChart";
 import { InlineIcon, type InlineIconName } from "@/components/InlineIcon";
 import ClassMark from "@/components/ClassMark";
@@ -101,10 +102,11 @@ export default function ClassSelectionScreen() {
   const { chooseClass } = useOnboarding();
   const { user } = useAuth();
   const { playBgMusic } = useSound();
+  const updatePlayerClassMutation = useUpdatePlayerClass();
 
   const [selected, setSelected] = useState<PlayerClass | null>(null);
   const [pendingClass, setPendingClass] = useState<ClassDef | null>(null);
-  const [radarClassIdx, setRadarClassIdx] = useState(0);
+  const modalClass = pendingClass ?? CLASSES[0]!;
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
@@ -116,21 +118,31 @@ export default function ClassSelectionScreen() {
   );
 
   const handleCardPress = async (cls: ClassDef) => {
-    if (selected) return;
+    if (selected || cls.id !== "assassin") return;
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setRadarClassIdx(CLASSES.findIndex((c) => c.id === cls.id));
     setPendingClass(cls);
   };
 
   const handleConfirm = async () => {
     if (!pendingClass || selected) return;
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    const confirmed = CLASSES[radarClassIdx]!;
-    setPendingClass(null);
-    setSelected(confirmed.id);
-    chooseClass(confirmed.id);
-    if (user) {
-      syncClass(user.id, confirmed.id).catch(() => {});
+    if (pendingClass.id !== "assassin") {
+      setPendingClass(null);
+      Alert.alert("Class unavailable", "Only Lyrical Assassin is available at launch.");
+      return;
+    }
+    const confirmed = pendingClass;
+    try {
+      if (user && !user.is_anonymous) {
+        await updatePlayerClassMutation.mutateAsync({
+          data: { class: "lyrical_assassin" },
+        });
+      }
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setPendingClass(null);
+      setSelected(confirmed.id);
+      chooseClass(confirmed.id);
+    } catch {
+      Alert.alert("Could not save your class", "Check your connection and try again.");
     }
   };
 
@@ -202,37 +214,22 @@ export default function ClassSelectionScreen() {
         onRequestClose={handleCancel}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: CLASSES[radarClassIdx]!.accentColor }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: modalClass.accentColor }]}>
             <View>
-              {/* Class name + arrows — tapping arrows changes the entire viewed class */}
               <View style={styles.radarNav}>
-                <TouchableOpacity
-                  onPress={() => setRadarClassIdx((radarClassIdx + CLASSES.length - 1) % CLASSES.length)}
-                  style={styles.radarArrow}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <InlineIcon name="chevron-left" size={22} color={CLASSES[radarClassIdx]!.accentColor} />
-                </TouchableOpacity>
                 <View style={styles.modalClassHeader}>
-                  <Text style={styles.modalEmoji}>{CLASSES[radarClassIdx]!.emoji}</Text>
-                  <Text style={[styles.modalName, { color: CLASSES[radarClassIdx]!.accentColor }]}>
-                    {CLASSES[radarClassIdx]!.name}
+                  <Text style={styles.modalEmoji}>{modalClass.emoji}</Text>
+                  <Text style={[styles.modalName, { color: modalClass.accentColor }]}>
+                    {modalClass.name}
                   </Text>
                   <Text style={[styles.modalTagline, { color: colors.textMuted }]}>
-                    {CLASSES[radarClassIdx]!.tagline}
+                    {modalClass.tagline}
                   </Text>
                 </View>
-                <TouchableOpacity
-                  onPress={() => setRadarClassIdx((radarClassIdx + 1) % CLASSES.length)}
-                  style={styles.radarArrow}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <InlineIcon name="chevron-right" size={22} color={CLASSES[radarClassIdx]!.accentColor} />
-                </TouchableOpacity>
               </View>
 
               <Text style={[styles.modalDesc, { color: colors.text }]}>
-                {CLASSES[radarClassIdx]!.cardDescription}
+                {modalClass.cardDescription}
               </Text>
 
               {/* Radar */}
@@ -241,8 +238,8 @@ export default function ClassSelectionScreen() {
                   size={175}
                   datasets={[
                     {
-                      stats: CLASS_RADAR_STATS[CLASSES[radarClassIdx]!.id as keyof typeof CLASS_RADAR_STATS],
-                      color: CLASS_RADAR_COLORS[CLASSES[radarClassIdx]!.id as keyof typeof CLASS_RADAR_COLORS],
+                      stats: CLASS_RADAR_STATS[modalClass.id as keyof typeof CLASS_RADAR_STATS],
+                      color: CLASS_RADAR_COLORS[modalClass.id as keyof typeof CLASS_RADAR_COLORS],
                       alpha: "55",
                     },
                   ]}
@@ -251,18 +248,18 @@ export default function ClassSelectionScreen() {
 
               {/* Traits */}
               <View style={styles.modalTraits}>
-                {CLASSES[radarClassIdx]!.traits.map((t, i) => (
+                {modalClass.traits.map((t, i) => (
                   <View
                     key={i}
                     style={[
                       styles.traitPill,
                       {
-                        backgroundColor: CLASSES[radarClassIdx]!.accentColor + "20",
-                        borderColor: CLASSES[radarClassIdx]!.accentColor + "44",
+                        backgroundColor: modalClass.accentColor + "20",
+                        borderColor: modalClass.accentColor + "44",
                       },
                     ]}
                   >
-                    <Text style={[styles.traitText, { color: CLASSES[radarClassIdx]!.accentColor }]}>{t}</Text>
+                    <Text style={[styles.traitText, { color: modalClass.accentColor }]}>{t}</Text>
                   </View>
                 ))}
               </View>
@@ -272,16 +269,16 @@ export default function ClassSelectionScreen() {
                 style={[
                   styles.currencyBadge,
                   {
-                    backgroundColor: CLASSES[radarClassIdx]!.accentColor + "20",
-                    borderColor: CLASSES[radarClassIdx]!.accentColor + "44",
+                    backgroundColor: modalClass.accentColor + "20",
+                    borderColor: modalClass.accentColor + "44",
                     alignSelf: "center",
                     marginTop: 6,
                   },
                 ]}
               >
-                <Text style={[styles.currencyDot, { color: CLASSES[radarClassIdx]!.accentColor }]}>◆</Text>
-                <Text style={[styles.currencyText, { color: CLASSES[radarClassIdx]!.accentColor }]}>
-                  Specialty: {CLASSES[radarClassIdx]!.currency}
+                <Text style={[styles.currencyDot, { color: modalClass.accentColor }]}>◆</Text>
+                <Text style={[styles.currencyText, { color: modalClass.accentColor }]}>
+                  Specialty: {modalClass.currency}
                 </Text>
               </View>
             </View>
@@ -295,9 +292,9 @@ export default function ClassSelectionScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => void handleConfirm()}
-                style={[styles.confirmBtn, { backgroundColor: CLASSES[radarClassIdx]!.accentColor }]}
+                style={[styles.confirmBtn, { backgroundColor: modalClass.accentColor }]}
               >
-                <Text style={styles.confirmBtnText}>Choose This Class</Text>
+                <Text style={styles.confirmBtnText}>Choose Lyrical Assassin</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -309,51 +306,73 @@ export default function ClassSelectionScreen() {
         <Text style={[styles.eyebrow, { color: colors.accent }]}>QUEST 4</Text>
         <Text style={[styles.heading, { color: colors.text }]}>Pick Your Lane</Text>
         <Text style={[styles.subheading, { color: colors.textMuted }]}>
-          Your class be who you are in the booth — it shapes what you earn and how the game scores you. Tap a card, read the full breakdown, then lock in. Can't change this later.
+          Lyrical Assassin is available at launch. Flow Rider and Trickster are coming in a future update.
         </Text>
       </View>
 
       {/* ── All three cards visible at once — no scrolling ────────────────── */}
       <View style={[styles.cardList, { paddingHorizontal: 20, paddingBottom: bottomPad + 20 }]}>
-        {CLASSES.map((cls) => (
-          <TouchableOpacity
-            key={cls.id}
-            activeOpacity={0.85}
-            onPress={() => void handleCardPress(cls)}
-            style={[
-              styles.classCard,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-                borderLeftColor: cls.accentColor,
-              },
-            ]}
-          >
-            <View style={styles.cardTop}>
-              <Text style={styles.emoji}>{cls.emoji}</Text>
-              <View style={styles.cardTitles}>
-                <Text style={[styles.className, { color: cls.accentColor }]}>{cls.name}</Text>
-                <Text style={[styles.tagline, { color: colors.textMuted }]}>{cls.tagline}</Text>
+        {CLASSES.map((cls) => {
+          const isLocked = cls.id !== "assassin";
+          return (
+            <TouchableOpacity
+              key={cls.id}
+              testID={`class-card-${cls.id}`}
+              disabled={isLocked}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isLocked }}
+              accessibilityLabel={
+                isLocked
+                  ? `${cls.name}, locked. Coming in a future update.`
+                  : `${cls.name}, available. Tap to view details.`
+              }
+              activeOpacity={0.85}
+              onPress={() => void handleCardPress(cls)}
+              style={[
+                styles.classCard,
+                isLocked && styles.lockedCard,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                  borderLeftColor: cls.accentColor,
+                },
+              ]}
+            >
+              <View style={styles.cardTop}>
+                <Text style={styles.emoji}>{cls.emoji}</Text>
+                <View style={styles.cardTitles}>
+                  <Text style={[styles.className, { color: cls.accentColor }]}>{cls.name}</Text>
+                  <Text style={[styles.tagline, { color: colors.textMuted }]}>{cls.tagline}</Text>
+                </View>
               </View>
-            </View>
 
-            <Text style={[styles.description, { color: colors.text }]}>
-              {cls.cardDescription}
-            </Text>
-
-            <View style={styles.cardBottom}>
-              <View style={[styles.currencyBadge, { backgroundColor: cls.accentColor + "20", borderColor: cls.accentColor + "44" }]}>
-                <Text style={[styles.currencyDot, { color: cls.accentColor }]}>◆</Text>
-                <Text style={[styles.currencyText, { color: cls.accentColor }]}>
-                  Specialty: {cls.currency}
-                </Text>
-              </View>
-              <Text style={[styles.tapHint, { color: cls.accentColor + "bb" }]}>
-                Tap for full breakdown →
+              <Text style={[styles.description, { color: colors.text }]}>
+                {cls.cardDescription}
               </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
+
+              <View style={styles.cardBottom}>
+                <View style={[styles.currencyBadge, { backgroundColor: cls.accentColor + "20", borderColor: cls.accentColor + "44" }]}>
+                  <Text style={[styles.currencyDot, { color: cls.accentColor }]}>◆</Text>
+                  <Text style={[styles.currencyText, { color: cls.accentColor }]}>
+                    Specialty: {cls.currency}
+                  </Text>
+                </View>
+                {isLocked ? (
+                  <View style={styles.lockedLabel}>
+                    <InlineIcon name="lock" size={12} color={colors.textMuted} />
+                    <Text style={[styles.lockedLabelText, { color: colors.textMuted }]}>
+                      Coming in a future update
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={[styles.tapHint, { color: cls.accentColor + "bb" }]}>
+                    Tap for full breakdown →
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -391,6 +410,9 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     padding: 18,
     gap: 12,
+  },
+  lockedCard: {
+    opacity: 0.72,
   },
   cardTop: {
     flexDirection: "row",
@@ -436,6 +458,15 @@ const styles = StyleSheet.create({
   },
   tapHint: {
     fontSize: 11,
+  },
+  lockedLabel: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  lockedLabelText: {
+    fontSize: 11,
+    fontWeight: "600",
   },
   // Modal styles
   modalOverlay: {
@@ -490,16 +521,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignSelf: "stretch",
     marginBottom: 2,
-  },
-  radarArrow: {
-    padding: 4,
-  },
-  radarClassName: {
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 0.3,
-    flex: 1,
-    textAlign: "center",
   },
   modalTraits: {
     flexDirection: "row",

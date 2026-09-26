@@ -1,12 +1,8 @@
 import React, { useEffect, useRef } from "react";
-import {
-  Animated,
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 interface ScoreBarProps {
   label: string;
@@ -17,35 +13,20 @@ interface ScoreBarProps {
 
 export function ScoreBar({ label, score, color, delay = 0 }: ScoreBarProps) {
   const colors = useColors();
-  const animatedWidth = useRef(new Animated.Value(0)).current;
-  const animatedOpacity = useRef(new Animated.Value(0)).current;
+  const reducedMotion = useReducedMotion();
+  const animatedWidth = useSharedValue(0);
+  const animatedOpacity = useSharedValue(0);
   const displayScore = score ?? 0;
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(animatedOpacity, {
-        toValue: 1,
-        duration: 300,
-        delay,
-        useNativeDriver: true,
-      }),
-      Animated.timing(animatedWidth, {
-        toValue: displayScore,
-        duration: 800,
-        delay: delay + 100,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  }, [displayScore, delay]);
-
-  const widthInterpolated = animatedWidth.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-    extrapolate: "clamp",
-  });
+    animatedOpacity.value = reducedMotion ? 1 : withDelay(delay, withTiming(1, { duration: 300 }));
+    animatedWidth.value = reducedMotion ? displayScore : withDelay(delay + 100, withTiming(displayScore, { duration: 800 }));
+  }, [displayScore, delay, reducedMotion, animatedOpacity, animatedWidth]);
+  const containerStyle = useAnimatedStyle(() => ({ opacity: animatedOpacity.value }));
+  const fillStyle = useAnimatedStyle(() => ({ width: `${Math.max(0, Math.min(100, animatedWidth.value))}%` }));
 
   return (
-    <Animated.View style={[styles.container, { opacity: animatedOpacity }]}>
+    <Animated.View style={[styles.container, containerStyle]}>
       <View style={styles.labelRow}>
         <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
         <Text style={[styles.score, { color: colors.text, fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace" }]}>
@@ -56,10 +37,8 @@ export function ScoreBar({ label, score, color, delay = 0 }: ScoreBarProps) {
         <Animated.View
           style={[
             styles.fill,
-            {
-              width: widthInterpolated,
-              backgroundColor: color,
-            },
+             { backgroundColor: color },
+             fillStyle,
           ]}
         />
       </View>

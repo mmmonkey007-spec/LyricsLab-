@@ -11,11 +11,13 @@ type JwtHeader = {
 };
 
 type JwtClaims = {
+  aud?: unknown;
   exp?: unknown;
   iss?: unknown;
   sub?: unknown;
   email?: unknown;
   role?: unknown;
+  is_anonymous?: unknown;
 };
 
 type Jwk = {
@@ -44,6 +46,7 @@ declare global {
         id: string;
         email: string | null;
         role: string | null;
+        isAnonymous: boolean;
       };
     }
   }
@@ -175,6 +178,10 @@ function unavailable(res: Response): void {
   res.status(503).json({ error: "Authentication key service unavailable." });
 }
 
+function hasAuthenticatedAudience(audience: unknown): boolean {
+  return audience === "authenticated";
+}
+
 export const requireSupabaseAuth: RequestHandler = async (
   req: Request,
   res: Response,
@@ -192,6 +199,7 @@ export const requireSupabaseAuth: RequestHandler = async (
     !parsed ||
     parsed.header.alg !== "ES256" ||
     typeof parsed.header.kid !== "string" ||
+    !hasAuthenticatedAudience(parsed.claims.aud) ||
     typeof parsed.claims.exp !== "number" ||
     !Number.isFinite(parsed.claims.exp) ||
     parsed.claims.exp <= Math.floor(Date.now() / 1000) ||
@@ -244,6 +252,7 @@ export const requireSupabaseAuth: RequestHandler = async (
     id: parsed.claims.sub,
     email: typeof parsed.claims.email === "string" ? parsed.claims.email : null,
     role: typeof parsed.claims.role === "string" ? parsed.claims.role : null,
+    isAnonymous: parsed.claims.is_anonymous === true,
   };
   next();
 };

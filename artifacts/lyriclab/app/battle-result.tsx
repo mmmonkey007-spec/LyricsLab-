@@ -1,9 +1,10 @@
 import * as Haptics from "expo-haptics";
+import { createAudioPlayer, type AudioPlayer } from "expo-audio";
 import { useSound } from "@/context/SoundContext";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
@@ -11,16 +12,24 @@ import {
   Text,
   TouchableOpacity,
   View,
+  useWindowDimensions,
 } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withDelay, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { RewardPopup } from "@/components/RewardPopup";
 import { InlineIcon } from "@/components/InlineIcon";
-import { useGame } from "@/context/GameContext";
+import { PerformanceShareButton } from "@/components/PerformanceShareButton";
+import { CourtBackflipStage } from "@/components/CourtBackflipStage";
+import { isCompetitionSession, useGame } from "@/context/GameContext";
 import { QUEST_REWARDS, useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
-import { normalizeDamage } from "@/services/api";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { normalizeDamage, performVerse, replayStoredPerformance, type LyricPerformanceResponse } from "@/services/api";
 import type { LineBreakdownItem } from "@/context/GameContext";
+import { applyResult, ladderFromResults, toIndex } from "@/services/ladder";
+import { computeStreakAndFreezes, toDateStr } from "@/services/streak";
+import { useRicoCourtBackflipQueue } from "@/hooks/useRicoCourtBackflipQueue";
 
 // ── Shared constants ──────────────────────────────────────────────────────────
 
@@ -67,23 +76,21 @@ function HpBar({
   color,
   delay = 0,
   isWinner,
+  reducedMotion,
 }: {
   label: string;
   hp: number;
   color: string;
   delay?: number;
   isWinner: boolean;
+  reducedMotion: boolean;
 }) {
-  const anim = useRef(new Animated.Value(100)).current;
+  const anim = useSharedValue(100);
 
   useEffect(() => {
-    Animated.timing(anim, {
-      toValue: hp,
-      duration: 1400,
-      delay,
-      useNativeDriver: false,
-    }).start();
-  }, [hp, delay, anim]);
+    anim.value = reducedMotion ? hp : withDelay(delay, withTiming(hp, { duration: 1400 }));
+  }, [hp, reducedMotion, anim]);
+  const fillStyle = useAnimatedStyle(() => ({ width: `${Math.max(0, Math.min(100, anim.value))}%` }));
 
   return (
     <View style={hpStyles.col}>
@@ -92,14 +99,8 @@ function HpBar({
         <Animated.View
           style={[
             hpStyles.fill,
-            {
-              backgroundColor: color,
-              width: anim.interpolate({
-                inputRange: [0, 100],
-                outputRange: ["0%", "100%"],
-                extrapolate: "clamp",
-              }),
-            },
+             { backgroundColor: color },
+             fillStyle,
           ]}
         />
       </View>
@@ -306,13 +307,74 @@ function VerseVisualizer({
 export default function BattleResultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { currentSession, saveSession, resetCurrentSession, addEnergy } = useGame();
+  const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
+  const courtFrameHeight = viewportWidth * 1.5;
+  const courtStageHeight = Math.max(viewportHeight, courtFrameHeight);
+  const params = useLocalSearchParams<{ storyStep?: string; battleId?: string }>();
+  const { currentSession, sessions, streak, saveSession, resetCurrentSession, addEnergy } = useGame();
   const { currentQuest, isOnboarding, mainQuest, completeQuest, completeMainQuest, rewardQueue, shiftRewardQueue } = useOnboarding();
   const { playSuccess, playMiss } = useSound();
+  const reducedMotion = useReducedMotion();
   const [savedSession, setSavedSession] = useState(false);
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [questTriggered, setQuestTriggered] = useState(false);
   const [mainQuestTriggered, setMainQuestTriggered] = useState(false);
+  const [performance, setPerformance] = useState<LyricPerformanceResponse | null>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [performanceError, setPerformanceError] = useState<string | null>(null);
+  const [showCourtCelebration, setShowCourtCelebration] = useState(false);
+  const courtBackflipQueue = useRicoCourtBackflipQueue();
+  const performancePlayer = useRef<AudioPlayer | null>(null);
+  const celebrationSession = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!currentSession || currentSession.mode !== "battle" || !currentSession.battleWinner) return;
+    if (celebrationSession.current === currentSession.id) return;
+    celebrationSession.current = currentSession.id;
+
+    const previousSessions = sessions.filter((session) => session.id !== currentSession.id);
+    const previousBattles = previousSessions
+      .filter((session) => session.mode === "battle" && session.battleWinner)
+      .sort((a, b) => a.timestamp - b.timestamp)
+      .map((session) => session.battleWinner === "player");
+    const priorRank = ladderFromResults(previousBattles);
+    const nextRank = applyResult(priorRank, currentSession.battleWinner === "player");
+    const promoted =
+      currentSession.battleWinner === "player" && toIndex(nextRank) > toIndex(priorRank);
+
+    const today = toDateStr(currentSession.timestamp);
+    const previousDays = new Set(
+      previousSessions
+        .filter(isCompetitionSession)
+        .map((session) => toDateStr(session.timestamp)),
+    );
+    const beforeStreak = computeStreakAndFreezes(previousDays, today);
+    const afterDays = new Set(previousDays);
+    afterDays.add(today);
+    const afterStreak = computeStreakAndFreezes(afterDays, today);
+    const earnedStreakMilestone =
+      !streak.playedToday &&
+      !previousDays.has(today) &&
+      afterStreak.freezesEarnedTotal > beforeStreak.freezesEarnedTotal;
+
+    if ((promoted || earnedStreakMilestone) && !reducedMotion) {
+      setShowCourtCelebration(true);
+      courtBackflipQueue.enqueue();
+    }
+  }, [currentSession, sessions, streak.playedToday, reducedMotion, courtBackflipQueue.enqueue]);
+
+  useEffect(() => {
+    if (!showCourtCelebration || courtBackflipQueue.active) return;
+    const timer = setTimeout(() => setShowCourtCelebration(false), 350);
+    return () => clearTimeout(timer);
+  }, [showCourtCelebration, courtBackflipQueue.active]);
+
+  useEffect(() => {
+    return () => {
+      performancePlayer.current?.remove();
+      performancePlayer.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (currentSession && currentSession.mode === "battle" && !savedSession) {
@@ -340,19 +402,26 @@ export default function BattleResultScreen() {
   // Guard: navigate away as a side effect, never during render
   useEffect(() => {
     if (!currentSession || currentSession.mode !== "battle") {
-      const id = setTimeout(() => { router.replace("/"); }, 0);
+      const id = setTimeout(() => {
+        if (params.storyStep && params.battleId) {
+          router.replace({ pathname: "/story", params: { completedBattleId: params.battleId } });
+        } else {
+          router.replace("/");
+        }
+      }, 0);
       return () => clearTimeout(id);
     }
-  }, [currentSession]);
+  }, [currentSession, params.battleId, params.storyStep]);
 
   // Haptic + sound feedback on result reveal
   useEffect(() => {
     if (!currentSession || currentSession.mode !== "battle") return;
     const won = currentSession.battleWinner === "player";
+    const draw = currentSession.battleWinner === "draw";
     if (won) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       playSuccess();
-    } else {
+    } else if (!draw) {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       playMiss();
     }
@@ -365,7 +434,50 @@ export default function BattleResultScreen() {
 
   const handleBattleAgain = () => {
     resetCurrentSession();
-    router.replace("/");
+    if (params.storyStep && params.battleId) {
+      router.replace({ pathname: "/story", params: { completedBattleId: params.battleId } });
+    } else {
+      router.replace("/");
+    }
+  };
+
+  const playPerformanceAudio = (audioBase64: string) => {
+    performancePlayer.current?.remove();
+    const player = createAudioPlayer({ uri: `data:audio/mpeg;base64,${audioBase64}` });
+    performancePlayer.current = player;
+    player.play();
+  };
+
+  const handlePerformVerse = async () => {
+    if (!currentSession) return;
+    setPerformanceLoading(true);
+    setPerformanceError(null);
+    try {
+      const generated = await performVerse(currentSession.lyrics, {
+        intro: true,
+        echoOut: true,
+        battleId: currentSession.botBattleId,
+      });
+      setPerformance(generated);
+      playPerformanceAudio(generated.audioBase64);
+    } catch (error) {
+      setPerformanceError(error instanceof Error ? error.message : "We could not make an exact take of your verse.");
+    } finally {
+      setPerformanceLoading(false);
+    }
+  };
+
+  const handleReplayPerformance = async () => {
+    if (!performance) return;
+    setPerformanceLoading(true);
+    setPerformanceError(null);
+    try {
+      playPerformanceAudio(await replayStoredPerformance(performance.id));
+    } catch (error) {
+      setPerformanceError(error instanceof Error ? error.message : "We could not replay that take.");
+    } finally {
+      setPerformanceLoading(false);
+    }
   };
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -376,12 +488,15 @@ export default function BattleResultScreen() {
     battleVerdict,
     battlePlayerRelativeScore,
     battleOpponentRelativeScore,
+    battlePlayerFinalScore,
+    battleOpponentFinalScore,
     lineBreakdown,
     battleOpponentLineBreakdown,
     battleWords,
   } = currentSession;
 
   const playerWon = battleWinner === "player";
+  const isDraw = battleWinner === "draw";
   const playerHp = battlePlayerRelativeScore ?? 0;
   const opponentHp = battleOpponentRelativeScore ?? 0;
   const playerColor = playerWon ? colors.cyan : colors.red;
@@ -427,7 +542,10 @@ export default function BattleResultScreen() {
               { color: playerWon ? colors.cyan : colors.red },
             ]}
           >
-            {playerWon ? "YOU WIN" : "YOU LOSE"}
+            {isDraw ? "DRAW" : playerWon ? "YOU WIN" : "YOU LOSE"}
+          </Text>
+          <Text style={[styles.finalScoreLine, { color: colors.text }]}>
+            FINAL {battlePlayerFinalScore ?? currentSession.finalScore} — {battleOpponentFinalScore ?? "—"} / 1000
           </Text>
           {battleWords && battleWords.length >= 2 && (
             <Text style={[styles.bannerSub, { color: colors.textMuted }]}>
@@ -450,6 +568,7 @@ export default function BattleResultScreen() {
               color={playerColor}
               delay={400}
               isWinner={playerWon}
+              reducedMotion={reducedMotion}
             />
             <View
               style={[styles.hpDivider, { backgroundColor: colors.border }]}
@@ -460,6 +579,7 @@ export default function BattleResultScreen() {
               color={opponentColor}
               delay={600}
               isWinner={!playerWon}
+              reducedMotion={reducedMotion}
             />
           </View>
           <Text style={[styles.vsLine, { color: colors.textMuted }]}>
@@ -507,6 +627,40 @@ export default function BattleResultScreen() {
             </Text>
           </View>
         )}
+
+        <View style={[styles.performanceCard, { backgroundColor: colors.surface, borderColor: colors.cyan + "44" }]}>
+          <View style={styles.cardHeader}>
+            <InlineIcon name="mic" size={14} color={colors.cyan} />
+            <Text style={[styles.cardTitle, { color: colors.cyan }]}>PERFORM MY VERSE</Text>
+          </View>
+          <Text style={[styles.performanceDescription, { color: colors.textMuted }]}>
+            Make an exact take of your battle verse, then share it with your stored result.
+          </Text>
+          <TouchableOpacity
+            accessibilityRole="button"
+            testID="battle-perform-verse"
+            onPress={performance ? handleReplayPerformance : handlePerformVerse}
+            disabled={performanceLoading}
+            style={[styles.performanceAction, { backgroundColor: colors.cyan, opacity: performanceLoading ? 0.6 : 1 }]}
+          >
+            <InlineIcon name="mic" size={16} color={colors.background} />
+            <Text style={[styles.performanceActionText, { color: colors.background }]}>
+              {performanceLoading ? "Mastering your verse…" : performance ? "Replay stored take" : "Perform my verse"}
+            </Text>
+          </TouchableOpacity>
+          {performance && (
+            <>
+              <Text style={[styles.performanceMeta, { color: colors.cyan }]}>
+                Exact take saved · {Math.round(performance.durationMs / 1000)} sec
+              </Text>
+              <PerformanceShareButton
+                performanceId={performance.id}
+                canShareScore={performance.battleId !== null}
+              />
+            </>
+          )}
+          {performanceError && <Text style={[styles.performanceError, { color: colors.red }]}>{performanceError}</Text>}
+        </View>
 
         {/* Full analysis toggle */}
         <TouchableOpacity
@@ -572,7 +726,7 @@ export default function BattleResultScreen() {
         >
           <InlineIcon name="crosshair" size={16} color={colors.background} />
           <Text style={[styles.battleAgainText, { color: colors.background }]}>
-            Battle Again
+            {params.storyStep ? "Continue Chapter" : "Battle Again"}
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -580,12 +734,50 @@ export default function BattleResultScreen() {
         <RewardPopup
           reward={rewardQueue[0]!}
           onDismiss={() => {
-            const nav = rewardQueue[0]?.navigatesTo ?? "/";
             shiftRewardQueue();
-            router.replace(nav as never);
+            if (params.storyStep && params.battleId) {
+              resetCurrentSession();
+              router.replace({ pathname: "/story", params: { completedBattleId: params.battleId } });
+            } else {
+              const nav = rewardQueue[0]?.navigatesTo;
+              if (nav) router.replace(nav as never);
+            }
           }}
         />
       )}
+      <Modal
+        visible={showCourtCelebration}
+        transparent
+        animationType="none"
+        statusBarTranslucent
+        onRequestClose={() => setShowCourtCelebration(false)}
+      >
+        <View
+          testID="rico-court-celebration"
+          style={[
+            StyleSheet.absoluteFillObject,
+            { backgroundColor: colors.courtBackdrop || colors.background, overflow: "hidden" },
+          ]}
+        >
+          <View
+            style={{
+              width: "100%",
+              height: courtStageHeight,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CourtBackflipStage
+              playKey={courtBackflipQueue.playKey}
+              playbackActive={courtBackflipQueue.active}
+              onEnded={courtBackflipQueue.onEnded}
+              onError={courtBackflipQueue.onError}
+              testID="rico-battle-celebration"
+              style={{ width: viewportWidth, height: courtFrameHeight }}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -621,6 +813,39 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     gap: 8,
   },
+  celebrationCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 188,
+    padding: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 14,
+    gap: 10,
+  },
+  celebrationCopy: {
+    flex: 1,
+    gap: 6,
+  },
+  celebrationEyebrow: {
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.3,
+  },
+  celebrationMove: {
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  celebrationNext: {
+    fontSize: 11,
+    lineHeight: 15,
+  },
+  celebrationPlayer: {
+    width: 118,
+    height: 168,
+    flex: 0,
+  },
   bannerText: {
     fontSize: 38,
     fontWeight: "900",
@@ -631,6 +856,12 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     fontWeight: "600",
     marginTop: 2,
+  },
+  finalScoreLine: {
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 1,
+    marginTop: 4,
   },
 
   card: {
@@ -757,6 +988,40 @@ const styles = StyleSheet.create({
   battleAgainText: {
     fontSize: 16,
     fontWeight: "700",
+  },
+  performanceCard: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+  },
+  performanceDescription: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginTop: 8,
+  },
+  performanceAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    marginTop: 14,
+  },
+  performanceActionText: {
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  performanceMeta: {
+    fontSize: 11,
+    marginTop: 10,
+  },
+  performanceError: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 8,
   },
   toggleBtn: {
     borderWidth: 1,

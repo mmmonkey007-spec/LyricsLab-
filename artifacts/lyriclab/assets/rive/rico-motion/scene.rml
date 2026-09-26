@@ -1,0 +1,64 @@
+<Rive version="1" kind="fragment">
+    <ImageAsset file="../../characters/snap-idle.png" name="RICO locked portrait" id="0:1"/>
+
+    <Artboard defaultStateMachineId="0:7" styleId="0:5" width="1024" height="1024" name="RICO" id="0:2">
+        <LayoutComponentStyle name="Artboard Style" id="0:5"/>
+        <Image x="512" y="512" name="RICO portrait" id="0:14" assetId="0:1"/>
+
+        <StateMachine name="RICO Idle" id="0:7">
+            <StateMachineLayer name="Idle layer" id="0:8">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState>
+                    <StateTransition stateToId="0:12"/>
+                </EntryState>
+                <AnimationState x="200" animationId="0:6" id="0:12"/>
+            </StateMachineLayer>
+        </StateMachine>
+
+        <StateMachine name="RICO Rapping" id="0:20">
+            <StateMachineLayer name="Rap layer" id="0:21">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState>
+                    <StateTransition stateToId="0:25"/>
+                </EntryState>
+                <AnimationState x="200" animationId="0:18" id="0:25"/>
+            </StateMachineLayer>
+        </StateMachine>
+
+        <LinearAnimation fps="60" duration="60" loopValue="loop" name="RICO Idle" id="0:6">
+            <KeyedObject objectId="0:14">
+                <KeyedProperty propertyKey="14">
+                    <KeyFrameDouble value="512" frame="0" interpolationType="linear"/>
+                    <KeyFrameDouble value="508" frame="30" interpolationType="linear"/>
+                    <KeyFrameDouble value="512" frame="60" interpolationType="linear"/>
+                </KeyedProperty>
+                <KeyedProperty propertyKey="17">
+                    <KeyFrameDouble value="1.03" frame="0" interpolationType="linear"/>
+                    <KeyFrameDouble value="1.045" frame="30" interpolationType="linear"/>
+                    <KeyFrameDouble value="1.03" frame="60" interpolationType="linear"/>
+                </KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+
+        <LinearAnimation fps="60" duration="48" loopValue="loop" name="RICO Rapping" id="0:18">
+            <KeyedObject objectId="0:14">
+                <KeyedProperty propertyKey="14">
+                    <KeyFrameDouble value="512" frame="0" interpolationType="linear"/>
+                    <KeyFrameDouble value="526" frame="12" interpolationType="linear"/>
+                    <KeyFrameDouble value="508" frame="24" interpolationType="linear"/>
+                    <KeyFrameDouble value="526" frame="36" interpolationType="linear"/>
+                    <KeyFrameDouble value="512" frame="48" interpolationType="linear"/>
+                </KeyedProperty>
+                <KeyedProperty propertyKey="17">
+                    <KeyFrameDouble value="1.04" frame="0" interpolationType="linear"/>
+                    <KeyFrameDouble value="1.065" frame="12" interpolationType="linear"/>
+                    <KeyFrameDouble value="1.04" frame="24" interpolationType="linear"/>
+                    <KeyFrameDouble value="1.065" frame="36" interpolationType="linear"/>
+                    <KeyFrameDouble value="1.04" frame="48" interpolationType="linear"/>
+                </KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+    </Artboard>
+</Rive>

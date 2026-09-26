@@ -1,0 +1,135 @@
+<Rive version="1" kind="fragment">
+    <Artboard defaultStateMachineId="0:7" width="1024" height="1536" styleId="0:5" name="RICO" id="0:2">
+        <LayoutComponentStyle name="Artboard Style" id="0:5"/>
+
+        <StateMachine name="RICO Idle" id="0:7">
+            <StateMachineLayer name="Idle layer" id="0:8">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState>
+                    <StateTransition stateToId="0:12"/>
+                </EntryState>
+                <AnimationState x="200" animationId="0:6" id="0:12"/>
+            </StateMachineLayer>
+        </StateMachine>
+
+        <StateMachine name="RICO Rapping" id="0:20">
+            <StateMachineLayer name="Rap layer" id="0:21">
+                <AnyState x="200" y="-120"/>
+                <ExitState x="400" y="-120"/>
+                <EntryState>
+                    <StateTransition stateToId="0:25"/>
+                </EntryState>
+                <AnimationState x="200" animationId="0:18" id="0:25"/>
+            </StateMachineLayer>
+        </StateMachine>
+
+        <!-- First sibling draws in front: head, arms, torso, then legs. -->
+        <Node x="512" y="250" name="Head pivot · neck" id="0:31">
+            <Image x="-5.5" y="-50" assetId="0:50" name="Head upper" id="0:40"/>
+            <Node x="0" y="1" name="Jaw hinge" id="0:32">
+                <Image x="-3" y="36" assetId="0:51" name="Lower jaw" id="0:42"/>
+            </Node>
+            <Image x="0.5" y="16.5" assetId="0:52" name="Mouth cavity" id="0:41"/>
+        </Node>
+
+        <Node x="305" y="410" name="Arm pivot · viewer left shoulder" id="0:33">
+            <Image x="-23.5" y="280.5" assetId="0:53" name="Arm · viewer left" id="0:43"/>
+        </Node>
+        <Node x="716" y="410" name="Arm pivot · viewer right shoulder" id="0:34">
+            <Image x="14.5" y="280" assetId="0:54" name="Arm · viewer right" id="0:44"/>
+        </Node>
+
+        <Node x="512" y="560" name="Torso pivot · breath" id="0:30">
+            <Image x="-4" y="4" assetId="0:55" name="Torso and patched shirt" id="0:45"/>
+        </Node>
+        <Image x="507" y="1144" assetId="0:56" name="Legs" id="0:46"/>
+
+        <LinearAnimation fps="60" duration="60" loopValue="loop" name="RICO Idle" id="0:6">
+            <KeyedObject objectId="0:30">
+                <KeyedProperty propertyKey="14">
+                    <KeyFrameDouble value="560" frame="0"/>
+                    <KeyFrameDouble value="554" frame="30"/>
+                    <KeyFrameDouble value="560" frame="60"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:31">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="-0.024" frame="30"/>
+                    <KeyFrameDouble value="0" frame="60"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:33">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="0.018" frame="30"/>
+                    <KeyFrameDouble value="0" frame="60"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:34">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="-0.018" frame="30"/>
+                    <KeyFrameDouble value="0" frame="60"/>
+                </KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+
+        <LinearAnimation fps="60" duration="48" loopValue="loop" name="RICO Rapping" id="0:18">
+            <KeyedObject objectId="0:30">
+                <KeyedProperty propertyKey="14">
+                    <KeyFrameDouble value="560" frame="0"/>
+                    <KeyFrameDouble value="570" frame="12"/>
+                    <KeyFrameDouble value="552" frame="24"/>
+                    <KeyFrameDouble value="570" frame="36"/>
+                    <KeyFrameDouble value="560" frame="48"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:31">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="0.11" frame="12"/>
+                    <KeyFrameDouble value="-0.06" frame="24"/>
+                    <KeyFrameDouble value="0.11" frame="36"/>
+                    <KeyFrameDouble value="0" frame="48"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:32">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="0.24" frame="12"/>
+                    <KeyFrameDouble value="0.025" frame="24"/>
+                    <KeyFrameDouble value="0.24" frame="36"/>
+                    <KeyFrameDouble value="0" frame="48"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:33">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="-0.045" frame="12"/>
+                    <KeyFrameDouble value="0.035" frame="24"/>
+                    <KeyFrameDouble value="-0.045" frame="36"/>
+                    <KeyFrameDouble value="0" frame="48"/>
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="0:34">
+                <KeyedProperty propertyKey="15">
+                    <KeyFrameDouble value="0" frame="0"/>
+                    <KeyFrameDouble value="0.04" frame="12"/>
+                    <KeyFrameDouble value="-0.03" frame="24"/>
+                    <KeyFrameDouble value="0.04" frame="36"/>
+                    <KeyFrameDouble value="0" frame="48"/>
+                </KeyedProperty>
+            </KeyedObject>
+        </LinearAnimation>
+    </Artboard>
+
+    <ImageAsset file="generated/rico-head-upper.png" name="RICO head upper" id="0:50"/>
+    <ImageAsset file="generated/rico-jaw.png" name="RICO jaw" id="0:51"/>
+    <ImageAsset file="generated/rico-mouth.png" name="RICO mouth cavity" id="0:52"/>
+    <ImageAsset file="generated/rico-arm-left.png" name="RICO arm viewer left" id="0:53"/>
+    <ImageAsset file="generated/rico-arm-right.png" name="RICO arm viewer right" id="0:54"/>
+    <ImageAsset file="generated/rico-torso.png" name="RICO torso" id="0:55"/>
+    <ImageAsset file="generated/rico-legs.png" name="RICO legs" id="0:56"/>
+</Rive>

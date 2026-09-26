@@ -33,7 +33,19 @@ const MIME_TYPES = {
   ".ttf": "font/ttf",
   ".otf": "font/otf",
   ".map": "application/json",
+  ".txt": "text/plain; charset=utf-8",
 };
+
+function isPrelaunchEnabled() {
+  const configured = process.env.PRELAUNCH_MODE?.trim().toLowerCase();
+  if (configured === "true" || configured === "1" || configured === "on") {
+    return true;
+  }
+  if (configured === "false" || configured === "0" || configured === "off") {
+    return false;
+  }
+  return process.env.NODE_ENV === "production";
+}
 
 function getAppName() {
   try {
@@ -46,12 +58,17 @@ function getAppName() {
 }
 
 function serveManifest(platform, res) {
-  const manifestPath = path.join(STATIC_ROOT, platform, "manifest.json");
+  const manifestPath =
+    platform === "ios"
+      ? path.join(STATIC_ROOT, "ios", "manifest.json")
+      : platform === "android"
+        ? path.join(STATIC_ROOT, "android", "manifest.json")
+        : null;
 
-  if (!fs.existsSync(manifestPath)) {
+  if (!manifestPath || !fs.existsSync(manifestPath)) {
     res.writeHead(404, { "content-type": "application/json" });
     res.end(
-      JSON.stringify({ error: `Manifest not found for platform: ${platform}` }),
+      JSON.stringify({ error: "Manifest not found for the requested platform." }),
     );
     return;
   }
@@ -65,6 +82,27 @@ function serveManifest(platform, res) {
   res.end(manifest);
 }
 
+function serveRobots(res) {
+  const content = isPrelaunchEnabled()
+    ? "User-agent: *\nDisallow: /\n"
+    : "User-agent: *\nAllow: /\n";
+  res.writeHead(200, {
+    "content-type": "text/plain; charset=utf-8",
+    "cache-control": "no-store",
+  });
+  res.end(content);
+}
+
+function isWithinRoot(root, candidate) {
+  const relativePath = path.relative(root, candidate);
+  return (
+    relativePath === "" ||
+    (relativePath !== ".." &&
+      !relativePath.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativePath))
+  );
+}
+
 function serveLandingPage(req, res, landingPageTemplate, appName) {
   const forwardedProto = req.headers["x-forwarded-proto"];
   const protocol = forwardedProto || "https";
@@ -75,31 +113,65 @@ function serveLandingPage(req, res, landingPageTemplate, appName) {
   const html = landingPageTemplate
     .replace(/BASE_URL_PLACEHOLDER/g, baseUrl)
     .replace(/EXPS_URL_PLACEHOLDER/g, expsUrl)
-    .replace(/APP_NAME_PLACEHOLDER/g, appName);
+    .replace(/APP_NAME_PLACEHOLDER/g, appName)
+    .replace(
+      /<\/head>/i,
+      `${isPrelaunchEnabled() ? '<meta name="robots" content="noindex, nofollow, noarchive">' : ""}</head>`,
+    );
 
+  if (isPrelaunchEnabled()) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
   res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
   res.end(html);
 }
 
 function serveStaticFile(urlPath, res) {
-  const safePath = path.normalize(urlPath).replace(/^(\.\.(\/|\\|$))+/, "");
-  const filePath = path.join(STATIC_ROOT, safePath);
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(urlPath);
+  } catch {
+    res.writeHead(400);
+    res.end("Bad Request");
+    return;
+  }
+  if (decodedPath.includes("\0")) {
+    res.writeHead(400);
+    res.end("Bad Request");
+    return;
+  }
 
-  if (!filePath.startsWith(STATIC_ROOT)) {
+  const filePath = path.resolve(STATIC_ROOT, `.${decodedPath}`);
+  if (!isWithinRoot(STATIC_ROOT, filePath)) {
     res.writeHead(403);
     res.end("Forbidden");
     return;
   }
 
-  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
+  let realRoot;
+  let realFilePath;
+  try {
+    realRoot = fs.realpathSync(STATIC_ROOT);
+    realFilePath = fs.realpathSync(filePath);
+  } catch {
+    res.writeHead(404);
+    res.end("Not Found");
+    return;
+  }
+  if (!isWithinRoot(realRoot, realFilePath)) {
+    res.writeHead(403);
+    res.end("Forbidden");
+    return;
+  }
+  if (!fs.statSync(realFilePath).isFile()) {
     res.writeHead(404);
     res.end("Not Found");
     return;
   }
 
-  const ext = path.extname(filePath).toLowerCase();
+  const ext = path.extname(realFilePath).toLowerCase();
   const contentType = MIME_TYPES[ext] || "application/octet-stream";
-  const content = fs.readFileSync(filePath);
+  const content = fs.readFileSync(realFilePath);
   res.writeHead(200, { "content-type": contentType });
   res.end(content);
 }
@@ -108,11 +180,18 @@ const landingPageTemplate = fs.readFileSync(TEMPLATE_PATH, "utf-8");
 const appName = getAppName();
 
 const server = http.createServer((req, res) => {
+  if (isPrelaunchEnabled()) {
+    res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
   const url = new URL(req.url || "/", `http://${req.headers.host}`);
   let pathname = url.pathname;
 
   if (basePath && pathname.startsWith(basePath)) {
     pathname = pathname.slice(basePath.length) || "/";
+  }
+
+  if (pathname === "/robots.txt") {
+    return serveRobots(res);
   }
 
   if (pathname === "/" || pathname === "/manifest") {

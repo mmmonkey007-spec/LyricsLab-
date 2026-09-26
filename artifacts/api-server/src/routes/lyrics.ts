@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq } from "drizzle-orm";
 import { db, topicalWordsTable } from "@workspace/db";
+import { containsBlockedTerm } from "../lib/content-policy";
 
 const router: IRouter = Router();
 
@@ -67,22 +68,12 @@ const STATIC_BATTLE_WORDS = [
 // ── Urban Dictionary Integration ────────────────────────────────────────────
 
 // Hard blocklist — slurs and explicit sexual content
-const UD_BLOCKLIST = new Set([
-  "nigger", "nigga", "faggot", "fag", "retard", "retarded", "tranny",
-  "chink", "spic", "kike", "gook", "wetback", "cunt",
-  "cock", "dick", "pussy", "penis", "vagina", "cum", "jizz", "anal",
-  "rape", "blowjob", "handjob", "dildo",
-]);
-
 function isWordAllowed(word: string): boolean {
   const w = word.toLowerCase().trim();
   if (w.length < 3 || w.length > 14) return false;
   if (/\s/.test(w)) return false;         // no phrases
   if (/[^a-z0-9'_-]/.test(w)) return false; // only simple chars
-  for (const bad of UD_BLOCKLIST) {
-    if (w.includes(bad)) return false;
-  }
-  return true;
+  return !containsBlockedTerm(w);
 }
 
 interface UDEntry { word: string; thumbs_up: number; }

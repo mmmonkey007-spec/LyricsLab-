@@ -13,6 +13,7 @@ import Svg, { Circle, Line, Polyline } from "react-native-svg";
 
 import { RadarChart } from "@/components/RadarChart";
 import { InlineIcon } from "@/components/InlineIcon";
+import { StreakFlame } from "@/components/StreakFlame";
 import type { RadarStats } from "@/components/RadarChart";
 import { RADAR_AXES } from "@/components/RadarChart";
 import { QuestBanner } from "@/components/QuestBanner";
@@ -48,8 +49,8 @@ function toRadarStats(session: GameSession): RadarStats {
     FLOW:  sc.flowRhythm,
     WORD:  sc.wordplay,
     HUMR:  sc.humorCraft ?? 0,
-    TECH:  sc.technique,
-    STORY: sc.originality,
+    STORY: sc.storytelling ?? 0,
+    ORIG: sc.originality,
   };
 }
 
@@ -251,9 +252,10 @@ export default function ProgressionScreen() {
         {/* Streak callout — shown if streak > 0, not shown if 0 */}
         {streak.currentStreak > 0 && (
           <View style={[styles.streakBanner, { backgroundColor: colors.accent + "18", borderColor: colors.accent + "40" }]}>
-            <Text style={[styles.streakFlame, { color: colors.accent }]}>🔥</Text>
+            <StreakFlame count={streak.currentStreak} atRisk={streak.atRisk} playedToday={streak.playedToday} frosted={streak.frosted} size={26} />
             <Text style={[styles.streakBannerText, { color: colors.text }]}>
               {streak.currentStreak}-day run
+              {streak.freezeWillCoverToday ? " · freeze will cover today" : streak.atRisk ? " · at risk today" : ""}
             </Text>
             {streak.longestStreak > streak.currentStreak && (
               <Text style={[styles.streakBannerSub, { color: colors.textMuted }]}>
@@ -494,9 +496,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginBottom: 16,
-  },
-  streakFlame: {
-    fontSize: 18,
   },
   streakBannerText: {
     fontSize: 14,

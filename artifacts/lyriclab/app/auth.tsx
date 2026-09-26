@@ -18,8 +18,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useAuth } from "@/context/AuthContext";
 import { InlineIcon } from "@/components/InlineIcon";
+import { Turnstile } from "@/components/Turnstile";
 import { useColors } from "@/hooks/useColors";
 import { useSound } from "@/context/SoundContext";
+import { validateUsername, USERNAME_ERROR } from "@/services/usernameValidation";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -39,6 +41,8 @@ export default function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetKey, setCaptchaResetKey] = useState(0);
   const { playBgMusic, stopBgMusicFade } = useSound();
 
   // Calm music on the auth/loading screen — shares the same Stars/Dreamer
@@ -66,13 +70,15 @@ export default function AuthScreen() {
     setNotice(null);
     if (!email.trim()) { setError("Email is required."); return; }
     if (isSignUp && !username.trim()) { setError("Username is required."); return; }
+    if (isSignUp && validateUsername(username)) { setError(USERNAME_ERROR); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+    if (!captchaToken) { setError("Complete the verification first."); return; }
 
     setLoading("email");
     try {
       const result = isSignUp
-        ? await signUp(email.trim(), password, username.trim())
-        : await signIn(email.trim(), password);
+        ? await signUp(email.trim(), password, username.trim(), captchaToken)
+        : await signIn(email.trim(), password, captchaToken);
 
       if (result.error) {
         setError(result.error);
@@ -84,6 +90,8 @@ export default function AuthScreen() {
       }
     } finally {
       setLoading(null);
+      setCaptchaToken(null);
+      setCaptchaResetKey((value) => value + 1);
     }
   };
 
@@ -133,7 +141,7 @@ export default function AuthScreen() {
               Play as Guest
             </Text>
             <Text style={[styles.guestSub, { color: colors.textMuted + "77" }]}>
-              Progress saved locally · no account needed
+              Free guest turns · no account needed
             </Text>
           </TouchableOpacity>
 
@@ -180,7 +188,13 @@ export default function AuthScreen() {
                 {(["signin", "signup"] as EmailTab[]).map((t) => (
                   <TouchableOpacity
                     key={t}
-                    onPress={() => { setEmailTab(t); setError(null); setNotice(null); }}
+                    onPress={() => {
+                      setEmailTab(t);
+                      setError(null);
+                      setNotice(null);
+                      setCaptchaToken(null);
+                      setCaptchaResetKey((value) => value + 1);
+                    }}
                     style={[
                       styles.tabBtn,
                       emailTab === t && { borderBottomColor: colors.accent, borderBottomWidth: 2 },
@@ -256,6 +270,8 @@ export default function AuthScreen() {
                   </Pressable>
                 </View>
 
+                <Turnstile onToken={setCaptchaToken} resetKey={captchaResetKey} />
+
                 {notice ? (
                   <View style={[styles.errorBox, { backgroundColor: colors.accent + "18", borderColor: colors.accent + "44" }]}>
                     <Text style={[styles.errorText, { color: colors.accent }]}>{notice}</Text>
@@ -270,9 +286,15 @@ export default function AuthScreen() {
 
                 <TouchableOpacity
                   onPress={handleEmailSubmit}
-                  disabled={loading !== null}
+                  disabled={loading !== null || !captchaToken}
                   activeOpacity={0.85}
-                  style={[styles.submitBtn, { backgroundColor: colors.accent, opacity: loading === "email" ? 0.7 : 1 }]}
+                  style={[
+                    styles.submitBtn,
+                    {
+                      backgroundColor: colors.accent,
+                      opacity: loading === "email" || !captchaToken ? 0.45 : 1,
+                    },
+                  ]}
                 >
                   {loading === "email" ? (
                     <ActivityIndicator color={colors.background} size="small" />
@@ -285,6 +307,10 @@ export default function AuthScreen() {
               </View>
             </View>
           )}
+
+          <Pressable onPress={() => router.push("/privacy")} style={styles.privacyLink}>
+            <Text style={[styles.privacyText, { color: colors.textMuted }]}>Privacy Policy</Text>
+          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -399,4 +425,6 @@ const styles = StyleSheet.create({
   errorText: { fontSize: 13, fontWeight: "500", lineHeight: 18 },
   submitBtn: { borderRadius: 12, paddingVertical: 14, alignItems: "center", marginTop: 2 },
   submitText: { fontSize: 15, fontWeight: "700" },
+  privacyLink: { alignItems: "center", paddingVertical: 18 },
+  privacyText: { fontSize: 13, textDecorationLine: "underline" },
 });

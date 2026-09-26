@@ -12,6 +12,10 @@ tags:
     description: Health operations
   - name: botBattles
     description: Tiered bot battle operations
+  - name: performances
+    description: Exact lyric performance generation and replay
+  - name: gameState
+    description: Server-owned player progression and public rankings
 paths:
   /healthz:
     get:
@@ -26,6 +30,70 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /prelaunch/status:
+    get:
+      operationId: getPrelaunchStatus
+      tags: [health]
+      summary: Check whether private testing is enabled
+      description: Public status only; does not disclose allowlist membership.
+      responses:
+        "200":
+          description: Private-testing mode status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrelaunchStatus"
+  /prelaunch/access:
+    get:
+      operationId: getPrelaunchAccess
+      tags: [health]
+      summary: Verify authenticated access to LyricLab
+      responses:
+        "200":
+          description: Access is allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PrelaunchAccess"
+        "401":
+          description: Authentication required
+        "403":
+          description: Account is not on the private-testing allowlist
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [gameState]
+      summary: Get sanitized global leaderboard entries
+      description: Returns rank, display name, class tier, and score only.
+      responses:
+        "200":
+          description: Sanitized global leaderboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaderboardResponse"
+        "401":
+          description: Authentication required
+  /profile/class:
+    patch:
+      operationId: updatePlayerClass
+      tags: [gameState]
+      summary: Save the authenticated user's selected class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePlayerClassInput"
+      responses:
+        "204":
+          description: Class saved
+        "400":
+          description: Unsupported class
+        "401":
+          description: Authentication required
+        "503":
+          description: Class could not be saved
   /bot-battles:
     post:
       operationId: startBotBattle
@@ -47,6 +115,42 @@ paths:
                 $ref: "#/components/schemas/BotBattleSession"
         "503":
           description: No active topical words are available
+  /story-progress:
+    get:
+      operationId: getStoryProgress
+      tags: [story]
+      summary: Get the authenticated user's Chapter 1 story progress
+      responses:
+        "200":
+          description: Current chapter and active battle state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoryProgress"
+        "401":
+          description: Authentication required
+  /story-progress/advance:
+    post:
+      operationId: advanceStoryProgress
+      tags: [story]
+      summary: Advance one validated Chapter 1 step
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdvanceStoryProgressInput"
+      responses:
+        "200":
+          description: Updated story progress
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoryProgress"
+        "400":
+          description: Invalid step or missing completed battle
+        "409":
+          description: Story step or battle state changed
   /bot-battles/{battleId}/verse:
     put:
       operationId: submitBotBattleVerse
@@ -89,6 +193,75 @@ paths:
           description: Battle cannot be ended yet
         "404":
           description: Battle not found
+  /performances:
+    post:
+      operationId: createLyricPerformance
+      tags: [performances]
+      summary: Generate and store an exact rap take
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLyricPerformanceInput"
+      responses:
+        "201":
+          description: Passing performance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LyricPerformance"
+        "400":
+          description: Invalid verse or options
+        "429":
+          description: Three successful takes already used today
+        "422":
+          description: Verse contains content that cannot be performed
+        "409":
+          description: Battle result is unavailable or does not match the verse
+        "503":
+          description: Provider unavailable or exact fidelity failed
+  /performances/{performanceId}/share-video/{option}:
+    get:
+      operationId: getLyricPerformanceShareVideo
+      tags: [performances]
+      summary: Render a shareable video from a stored passing performance
+      parameters:
+        - $ref: "#/components/parameters/PerformanceId"
+        - $ref: "#/components/parameters/ShareVideoOption"
+      responses:
+        "200":
+          description: Rendered vertical MP4 video
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Invalid performance ID or withScore option
+        "404":
+          description: Performance not found
+        "409":
+          description: No stored battle result is linked to this performance
+        "503":
+          description: Video renderer unavailable
+  /performances/{performanceId}/audio:
+    get:
+      operationId: getLyricPerformanceAudio
+      tags: [performances]
+      summary: Replay a stored passing performance
+      parameters:
+        - $ref: "#/components/parameters/PerformanceId"
+      responses:
+        "200":
+          description: Stored MP3 audio
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Performance not found
 components:
   parameters:
     BotBattleId:
@@ -98,7 +271,50 @@ components:
       schema:
         type: integer
         minimum: 1
+    PerformanceId:
+      name: performanceId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    ShareVideoOption:
+      name: option
+      in: path
+      required: true
+      schema:
+        type: string
+        enum: [rap, score]
   schemas:
+    LeaderboardEntry:
+      type: object
+      required: [rank, displayName, rankTier, score]
+      properties:
+        rank:
+          type: integer
+          minimum: 1
+        displayName:
+          type: string
+        rankTier:
+          type: [string, "null"]
+        score:
+          type: integer
+          minimum: 0
+    LeaderboardResponse:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/LeaderboardEntry"
+    UpdatePlayerClassInput:
+      type: object
+      required: [class]
+      properties:
+        class:
+          type: string
+          enum: [lyrical_assassin]
     HealthStatus:
       type: object
       properties:
@@ -106,6 +322,22 @@ components:
           type: string
       required:
         - status
+    PrelaunchStatus:
+      type: object
+      required: [enabled]
+      properties:
+        enabled:
+          type: boolean
+    PrelaunchAccess:
+      type: object
+      required: [enabled, allowed, userId]
+      properties:
+        enabled:
+          type: boolean
+        allowed:
+          type: boolean
+        userId:
+          type: string
     BotBattleVerseInput:
       type: object
       required: [verse]
@@ -114,12 +346,151 @@ components:
           type: string
           minLength: 1
           maxLength: 5000
+    CreateLyricPerformanceInput:
+      type: object
+      required: [verse, intro, echoOut]
+      properties:
+        verse:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        intro:
+          type: boolean
+          default: true
+        echoOut:
+          type: boolean
+          default: true
+        battleId:
+          type: integer
+          minimum: 1
+    LyricPerformance:
+      type: object
+      required: [id, battleId, verse, intro, echoOut, durationMs, audioSizeBytes, audioProvenance, beatManifest, transcript, fidelityPassed, createdAt, remainingToday, audioBase64]
+      properties:
+        id:
+          type: integer
+        battleId:
+          type: ["integer", "null"]
+        verse:
+          type: string
+        intro:
+          type: boolean
+        echoOut:
+          type: boolean
+        durationMs:
+          type: integer
+        audioSizeBytes:
+          type: integer
+        audioProvenance:
+          $ref: "#/components/schemas/AudioProvenance"
+        beatManifest:
+          anyOf:
+            - $ref: "#/components/schemas/AudioBeatManifest"
+            - type: "null"
+        transcript:
+          type: string
+        fidelityPassed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        remainingToday:
+          type: integer
+        audioBase64:
+          type: string
+    AudioProvenance:
+      type: string
+      enum: [original, generated, other, splice, unknown, composite]
+    BeatManifestSource:
+      type: object
+      required: [id, provenance]
+      properties:
+        id:
+          type: string
+          minLength: 1
+        provenance:
+          type: string
+          enum: [original, generated, other, splice, unknown]
+    AudioBeatManifest:
+      type: object
+      required: [version, outputId, sources]
+      properties:
+        version:
+          type: integer
+          const: 1
+        outputId:
+          type: string
+          minLength: 1
+        sources:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/BeatManifestSource"
     StartBotBattleInput:
       type: object
       properties:
         tier:
           type: string
           enum: [bronze, silver, gold, master]
+        storyStep:
+          type: string
+          enum: [battle_1, battle_2, boss_battle]
+          description: Optional server-validated Chapter 1 battle stage.
+    AdvanceStoryProgressInput:
+      type: object
+      required: [fromStep]
+      properties:
+        fromStep:
+          type: string
+          enum: [scene_1, battle_1, scene_2, battle_2, scene_3, boss_battle, hook]
+        battleId:
+          type: integer
+          minimum: 1
+    StoryProgress:
+      type: object
+      required: [chapter, step, activeBattle, lastBattleOutcome, bossWeakestAxis]
+      properties:
+        chapter:
+          type: integer
+          enum: [1]
+        step:
+          type: string
+          enum: [scene_1, battle_1, scene_2, battle_2, scene_3, boss_battle, hook]
+        activeBattle:
+          type: [object, "null"]
+          properties:
+            id:
+              type: integer
+            status:
+              type: string
+              enum: [started, verse_submitted, completed]
+            tier:
+              type: string
+              enum: [bronze, silver, gold, master]
+            botName:
+              type: string
+            topic:
+              type: [string, "null"]
+            winner:
+              type: [string, "null"]
+              enum: [player, opponent, draw, null]
+            playerFinalScore:
+              type: [integer, "null"]
+              minimum: 0
+              maximum: 1000
+            opponentFinalScore:
+              type: [integer, "null"]
+              minimum: 0
+              maximum: 1000
+            weakestAxis:
+              type: [string, "null"]
+              enum: [rhyme, flow, wordplay, originality, storytelling, null]
+        lastBattleOutcome:
+          type: [string, "null"]
+          enum: [win, loss, draw, null]
+        bossWeakestAxis:
+          type: [string, "null"]
+          enum: [rhyme, flow, wordplay, originality, storytelling, null]
     BotBattleSession:
       type: object
       required:
@@ -173,11 +544,28 @@ components:
       properties:
         winner:
           type: string
-          enum: [player, opponent]
+          enum: [player, opponent, draw]
         playerRelativeScore:
           type: number
+          description: Legacy normalized 0-100 score used for HP display.
         opponentRelativeScore:
           type: number
+          description: Legacy normalized 0-100 score used for HP display.
+        playerFinalScore:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          description: Deterministic five-axis battle score, excluding Humor.
+        opponentFinalScore:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          description: Deterministic five-axis battle score, excluding Humor.
+        playerMultiplier:
+          type: number
+          minimum: 1
+          maximum: 2
+          description: Player class-axis skill multiplier; currently 1.
         playerDimensionScores:
           $ref: "#/components/schemas/BotBattleDimensionScores"
         opponentDimensionScores:
@@ -194,7 +582,7 @@ components:
           type: string
     BotBattleDimensionScores:
       type: object
-      required: [rhymeScore, flowScore, wordplayScore, originalityScore, techniqueScore, humorScore]
+      required: [rhymeScore, flowScore, wordplayScore, originalityScore, storytellingScore, humorScore]
       properties:
         rhymeScore:
           type: number
@@ -204,7 +592,7 @@ components:
           type: number
         originalityScore:
           type: number
-        techniqueScore:
+        storytellingScore:
           type: number
         humorScore:
           type: number

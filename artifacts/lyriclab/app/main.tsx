@@ -16,6 +16,7 @@ import { useGame } from "@/context/GameContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
 import { InlineIcon } from "@/components/InlineIcon";
+import { StreakFlame } from "@/components/StreakFlame";
 
 const CLASS_ART = {
   assassin: require("../assets/characters/assassin.png"),
@@ -93,9 +94,13 @@ export default function MainScreen() {
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>ENERGY</Text>
           </View>
           <View style={[styles.stat, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={styles.flame}>🔥</Text>
-            <Text style={[styles.statValue, { color: colors.text }]}>{streak.currentStreak}</Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>STREAK</Text>
+            <StreakFlame count={streak.currentStreak} atRisk={streak.atRisk} playedToday={streak.playedToday} frosted={streak.frosted} size={28} />
+            <Text style={[styles.statValue, { color: streak.atRisk ? colors.destructive : colors.text }]}>
+              {streak.currentStreak}
+            </Text>
+            <Text style={[styles.statLabel, { color: streak.atRisk ? colors.destructive : colors.textMuted }]}>
+              {streak.freezeWillCoverToday ? "FREEZE WILL COVER TODAY" : streak.atRisk ? "AT RISK" : "STREAK"}
+            </Text>
           </View>
         </View>
 
@@ -161,10 +166,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
-  },
-  flame: {
-    fontSize: 18,
-    lineHeight: 22,
   },
   statValue: {
     fontSize: 22,

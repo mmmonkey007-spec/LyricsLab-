@@ -32,8 +32,8 @@ export const RADAR_AXES = [
   "BARZ",   // 0 — top          (primary)
   "FLOW",   // 1 — upper-right  (primary)
   "HUMR",   // 2 — lower-right  (secondary)
-  "STORY",  // 3 — bottom       (secondary)
-  "TECH",   // 4 — lower-left   (secondary)
+  "STORY",  // 3 — lower-right  (secondary)
+  "ORIG",   // 4 — lower-left   (secondary)
   "WORD",   // 5 — upper-left   (primary)
 ] as const;
 export type RadarAxis = (typeof RADAR_AXES)[number];
@@ -44,7 +44,7 @@ export const RADAR_AXIS_LABELS: Record<RadarAxis, string> = {
   BARZ:  "Barz",
   FLOW:  "Flow",
   WORD:  "Wordplay",
-  TECH:  "Technique",
+  ORIG:  "Originality",
   HUMR:  "Humor",
   STORY: "Storytelling",
 };
@@ -58,10 +58,10 @@ export interface RadarDataset {
 }
 
 export const CLASS_RADAR_STATS: Record<string, RadarStats> = {
-  assassin:    { BARZ: 95, FLOW: 45, WORD: 55, TECH: 35, HUMR: 70, STORY: 40 },
-  rider:       { BARZ: 35, FLOW: 95, WORD: 45, TECH: 30, HUMR: 85, STORY: 55 },
-  trickster:   { BARZ: 40, FLOW: 35, WORD: 95, TECH: 55, HUMR: 75, STORY: 45 },
-  metamorpher: { BARZ: 40, FLOW: 50, WORD: 80, TECH: 95, HUMR: 60, STORY: 75 },  // dormant
+  assassin:    { BARZ: 95, FLOW: 45, WORD: 55, HUMR: 70, STORY: 40, ORIG: 65 },
+  rider:       { BARZ: 35, FLOW: 95, WORD: 45, HUMR: 85, STORY: 55, ORIG: 60 },
+  trickster:   { BARZ: 40, FLOW: 35, WORD: 95, HUMR: 75, STORY: 45, ORIG: 65 },
+  metamorpher: { BARZ: 40, FLOW: 50, WORD: 80, HUMR: 60, STORY: 75, ORIG: 95 },  // dormant
 };
 
 export const CLASS_RADAR_COLORS: Record<string, string> = {

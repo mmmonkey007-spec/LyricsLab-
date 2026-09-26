@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { isPrelaunchMode } from "./middlewares/prelaunch";
 
 const rawPort = process.env["PORT"];
 
@@ -13,6 +14,30 @@ const port = Number(rawPort);
 
 if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
+
+const missingEnvironmentVariables = [
+  !process.env.ANTHROPIC_API_KEY ? "ANTHROPIC_API_KEY" : null,
+  !process.env.ELEVENLABS_API_KEY ? "ELEVENLABS_API_KEY" : null,
+  !(process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE)
+    ? "SUPABASE_SERVICE_ROLE_KEY"
+    : null,
+  process.env.NODE_ENV === "production" && !process.env.ALLOWED_ORIGINS?.trim()
+    ? "ALLOWED_ORIGINS"
+    : null,
+].filter((value): value is string => value !== null);
+
+if (missingEnvironmentVariables.length > 0) {
+  logger.warn(
+    { missingEnvironmentVariables },
+    "Missing startup configuration; related features may be unavailable.",
+  );
+}
+
+if (isPrelaunchMode() && !process.env.PRELAUNCH_ALLOWLIST?.trim()) {
+  logger.warn(
+    "PRELAUNCH_ALLOWLIST is empty; all signed-in accounts are blocked from protected routes.",
+  );
 }
 
 app.listen(port, (err) => {

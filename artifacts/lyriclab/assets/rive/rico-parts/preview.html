@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="data:," />
+    <title>RICO Rive preview</title>
+    <script src="https://cdn.jsdelivr.net/npm/@rive-app/canvas@2.33.0"></script>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        background: #101116;
+        color: #fff;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
+      main {
+        width: 100vw;
+        height: 100vh;
+        min-height: 600px;
+        display: grid;
+        grid-template-rows: 82px minmax(0, 1fr) 66px;
+        justify-items: center;
+        background:
+          radial-gradient(ellipse at 50% 42%, rgba(87, 67, 111, .28), transparent 48%),
+          #101116;
+      }
+      header, footer { width: min(100%, 720px); display: flex; align-items: center; }
+      header { justify-content: space-between; padding: 0 34px; }
+      .brand { font-size: 14px; font-weight: 800; letter-spacing: .18em; color: #f0c969; }
+      #mode-label {
+        border: 1px solid rgba(240, 201, 105, .45);
+        border-radius: 999px;
+        color: #f0c969;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: .12em;
+        padding: 9px 14px;
+      }
+      canvas { display: block; width: min(100vw, 680px); height: 100%; min-height: 0; }
+      footer { justify-content: center; color: #9696a4; font-size: 12px; letter-spacing: .11em; }
+      #status { position: fixed; left: 10px; bottom: 8px; opacity: .5; font-size: 10px; }
+      body[data-record="true"] #status { display: none; }
+      body[data-ready="true"] #status { color: #8df2b2; }
+      body[data-error="true"] #status { color: #ff7272; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand">LYRICLAB / RICO</div>
+        <div id="mode-label">IDLE</div>
+      </header>
+      <canvas id="rive-canvas" width="680" height="930" aria-label="Animated RICO portrait"></canvas>
+      <footer>BUILT FROM ALIGNED CUTOUTS · RIVE RUNTIME</footer>
+    </main>
+    <div id="status">Loading Rive…</div>
+    <script>
+      window.__riveReady = false;
+      window.__riveError = null;
+      window.__rive = null;
+      window.__recording = null;
+      window.startRecording = async function () {
+        if (window.__recording) throw new Error("Recording is already active");
+        const videoCanvas = document.createElement("canvas");
+        videoCanvas.width = 720;
+        videoCanvas.height = 1080;
+        const context = videoCanvas.getContext("2d");
+        const stream = videoCanvas.captureStream(0);
+        const track = stream.getVideoTracks()[0];
+        const mimeType = ["video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]
+          .find((type) => MediaRecorder.isTypeSupported(type));
+        if (!track || typeof track.requestFrame !== "function" || !mimeType) {
+          throw new Error("This browser cannot record the Rive canvas");
+        }
+        const recorder = new MediaRecorder(stream, { mimeType });
+        const chunks = [];
+        recorder.addEventListener("dataavailable", (event) => {
+          if (event.data.size) chunks.push(event.data);
+        });
+        recorder.start(250);
+        let lastFrame = 0;
+        let raf = 0;
+        const render = (time) => {
+          if (time - lastFrame >= 1000 / 30) {
+            lastFrame = time;
+            const background = context.createRadialGradient(360, 455, 90, 360, 455, 560);
+            background.addColorStop(0, "#292338");
+            background.addColorStop(1, "#101116");
+            context.fillStyle = background;
+            context.fillRect(0, 0, 720, 1080);
+            context.fillStyle = "#f0c969";
+            context.font = "800 14px Inter, Arial, sans-serif";
+            context.letterSpacing = "2px";
+            context.fillText("LYRICLAB / RICO", 32, 43);
+            const label = document.body.dataset.mode === "rap" ? "RAP MODE" : "IDLE MODE";
+            context.font = "800 12px Inter, Arial, sans-serif";
+            const width = context.measureText(label).width + 26;
+            context.strokeStyle = "rgba(240, 201, 105, .5)";
+            context.lineWidth = 1;
+            context.beginPath();
+            context.roundRect(688 - width, 22, width, 36, 18);
+            context.stroke();
+            context.fillText(label, 701 - width, 45);
+            context.drawImage(document.getElementById("rive-canvas"), 20, 82, 680, 930);
+            context.fillStyle = "#9696a4";
+            context.font = "12px Inter, Arial, sans-serif";
+            context.letterSpacing = "1px";
+            context.fillText("BUILT FROM ALIGNED CUTOUTS · RIVE RUNTIME", 185, 1050);
+            track.requestFrame();
+          }
+          raf = requestAnimationFrame(render);
+        };
+        raf = requestAnimationFrame(render);
+        window.__recording = { recorder, stream, chunks, cancel: () => cancelAnimationFrame(raf) };
+        return { mimeType };
+      };
+      window.stopRecording = async function () {
+        if (!window.__recording) throw new Error("Recording is not active");
+        const recording = window.__recording;
+        recording.cancel();
+        await new Promise((resolve) => {
+          recording.recorder.addEventListener("stop", resolve, { once: true });
+          recording.recorder.stop();
+        });
+        recording.stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(recording.chunks, { type: recording.recorder.mimeType });
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        let binary = "";
+        for (let offset = 0; offset < bytes.length; offset += 0x8000) {
+          binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+        }
+        window.__recording = null;
+        return { mimeType: blob.type, base64: btoa(binary) };
+      };
+      window.bootRive = function (mode) {
+        window.__riveReady = false;
+        window.__riveError = null;
+        document.body.dataset.ready = "false";
+        document.body.dataset.mode = mode;
+        document.getElementById("mode-label").textContent = mode === "rap" ? "RAP MODE" : "IDLE MODE";
+        document.getElementById("status").textContent = "Loading " + mode + "…";
+        if (window.__rive) {
+          window.__rive.cleanup();
+          window.__rive = null;
+        }
+        const machine = mode === "rap" ? "RICO Rapping" : "RICO Idle";
+        window.__rive = new rive.Rive({
+          src: "./build/rico-parts.riv",
+          canvas: document.getElementById("rive-canvas"),
+          artboard: "RICO",
+          stateMachines: machine,
+          autoplay: true,
+          fit: rive.Fit.Contain,
+          alignment: rive.Alignment.Center,
+          onLoad: function () {
+            window.__rive.resizeDrawingSurfaceToCanvas();
+            window.__riveReady = true;
+            document.body.dataset.ready = "true";
+            document.getElementById("status").textContent = "Rive ready · " + machine;
+          },
+          onLoadError: function (error) {
+            window.__riveError = String(error);
+            document.body.dataset.error = "true";
+            document.getElementById("status").textContent = "Rive load error: " + error;
+          },
+        });
+      };
+      const params = new URLSearchParams(location.search);
+      document.body.dataset.record = String(params.has("record"));
+      window.bootRive(params.get("mode") || "idle");
+    </script>
+  </body>
+</html>

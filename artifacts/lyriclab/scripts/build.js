@@ -127,7 +127,30 @@ function getExpoPublicReplId() {
   return process.env.REPL_ID || process.env.EXPO_PUBLIC_REPL_ID;
 }
 
-async function startMetro(expoPublicDomain, expoPublicReplId) {
+function resolvePrelaunchMode() {
+  const configured = process.env.PRELAUNCH_MODE?.trim().toLowerCase();
+  if (configured === "true" || configured === "1" || configured === "on") {
+    return true;
+  }
+  if (configured === "false" || configured === "0" || configured === "off") {
+    return false;
+  }
+  return true;
+}
+
+function writeRobotsFiles(prelaunchEnabled) {
+  const content = prelaunchEnabled
+    ? "User-agent: *\nDisallow: /\n"
+    : "User-agent: *\nAllow: /\n";
+  const publicDir = path.join(projectRoot, "public");
+  const staticBuild = path.join(projectRoot, "static-build");
+  fs.mkdirSync(publicDir, { recursive: true });
+  fs.writeFileSync(path.join(publicDir, "robots.txt"), content);
+  fs.writeFileSync(path.join(staticBuild, "robots.txt"), content);
+  console.log(`Robots indexing ${prelaunchEnabled ? "disabled" : "allowed"}`);
+}
+
+async function startMetro(expoPublicDomain, expoPublicReplId, prelaunchEnabled) {
   const isRunning = await checkMetroHealth();
   if (isRunning) {
     console.log("Metro already running");
@@ -140,6 +163,7 @@ async function startMetro(expoPublicDomain, expoPublicReplId) {
     ...process.env,
     EXPO_PUBLIC_DOMAIN: expoPublicDomain,
     EXPO_PUBLIC_REPL_ID: expoPublicReplId,
+    EXPO_PUBLIC_PRELAUNCH_MODE: String(prelaunchEnabled),
   };
 
   if (expoPublicReplId) {
@@ -516,9 +540,11 @@ async function main() {
   const timestamp = `${Date.now()}-${process.pid}`;
 
   prepareDirectories(timestamp);
+  const prelaunchEnabled = resolvePrelaunchMode();
+  writeRobotsFiles(prelaunchEnabled);
   clearMetroCache();
 
-  await startMetro(domain, expoPublicReplId);
+  await startMetro(domain, expoPublicReplId, prelaunchEnabled);
 
   const downloadTimeout = 600000;
   const downloadPromise = downloadBundlesAndManifests(timestamp);

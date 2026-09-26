@@ -1,9 +1,9 @@
 import * as Haptics from "expo-haptics";
+import { createAudioPlayer, type AudioPlayer } from "expo-audio";
 import { useSound } from "@/context/SoundContext";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Animated,
   Modal,
   Platform,
   ScrollView,
@@ -14,31 +14,36 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { Animated as RNAnimated } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ScoreBar } from "@/components/ScoreBar";
 import { RewardPopup } from "@/components/RewardPopup";
 import { InlineIcon } from "@/components/InlineIcon";
-import { isDrillSession, useGame } from "@/context/GameContext";
+import { PerformanceShareButton } from "@/components/PerformanceShareButton";
+import { isDrillSession, useGame, xpEarnedForSession } from "@/context/GameContext";
 import { QUEST_REWARDS, useOnboarding } from "@/context/OnboardingContext";
 import { useColors } from "@/hooks/useColors";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { performVerse, replayStoredPerformance, type LyricPerformanceResponse } from "@/services/api";
 
 const DIMENSION_LABELS: Record<string, string> = {
-  rhymeQuality: "Rhyme Quality",
-  flowRhythm: "Flow & Rhythm",
+  rhymeQuality: "Barz",
+  flowRhythm: "Flow",
   wordplay: "Wordplay",
   originality: "Originality",
-  technique: "Technique",
-  humorCraft: "Humour",
+  humorCraft: "Humor",
+  storytelling: "Storytelling",
 };
 
 const DIMENSION_ORDER = [
   "rhymeQuality",
   "flowRhythm",
   "wordplay",
-  "originality",
-  "technique",
   "humorCraft",
+  "storytelling",
+  "originality",
 ] as const;
 
 const TECHNIQUE_PRIORITY = [
@@ -87,22 +92,31 @@ function getDominantTechniqueColor(techniques: string[]): string | null {
 export default function ResultScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ storyReturn?: string }>();
+  const returnRoute = params.storyReturn === "1" ? "/story" : "/";
   const { currentSession, saveSession, resetCurrentSession, addEnergy } = useGame();
   const { currentQuest, isOnboarding, mainQuest, completeQuest, completeMainQuest, rewardQueue, shiftRewardQueue } = useOnboarding();
   const { playSuccess } = useSound();
 
-  const scoreAnim = useRef(new Animated.Value(0)).current;
+  const reducedMotion = useReducedMotion();
+  const reveal = useSharedValue(0.96);
   const [savedSession, setSavedSession] = useState(false);
   const [questTriggered, setQuestTriggered] = useState(false);
   const [showFullAnalysis, setShowFullAnalysis] = useState(false);
   const [pendingTutorial, setPendingTutorial] = useState<string | null>(null);
   const [mainQuestTriggered, setMainQuestTriggered] = useState(false);
-  const lineAnims = useRef<Animated.Value[]>([]);
+  const [intro, setIntro] = useState(true);
+  const [echoOut, setEchoOut] = useState(true);
+  const [performance, setPerformance] = useState<LyricPerformanceResponse | null>(null);
+  const [performanceLoading, setPerformanceLoading] = useState(false);
+  const [performanceError, setPerformanceError] = useState<string | null>(null);
+  const performancePlayer = useRef<AudioPlayer | null>(null);
+  const lineAnims = useRef<RNAnimated.Value[]>([]);
 
   // Lazily initialise one Animated.Value per line so values exist before first paint
   const lineBreakdownItems = currentSession?.lineBreakdown ?? [];
   if (lineAnims.current.length !== lineBreakdownItems.length) {
-    lineAnims.current = lineBreakdownItems.map(() => new Animated.Value(0));
+    lineAnims.current = lineBreakdownItems.map(() => new RNAnimated.Value(0));
   }
 
   useEffect(() => {
@@ -145,20 +159,63 @@ export default function ResultScreen() {
 
   useEffect(() => {
     if (currentSession) {
-      Animated.timing(scoreAnim, {
-        toValue: currentSession.finalScore,
-        duration: 1000,
-        useNativeDriver: false,
-      }).start();
+      reveal.value = reducedMotion ? 1 : withSpring(1, { damping: 14, stiffness: 150 });
     }
-  }, [currentSession]);
+  }, [currentSession, reducedMotion, reveal]);
+  const revealStyle = useAnimatedStyle(() => ({
+    opacity: reveal.value,
+    transform: [{ scale: reveal.value }],
+  }));
+
+  useEffect(() => {
+    return () => {
+      performancePlayer.current?.remove();
+      performancePlayer.current = null;
+    };
+  }, []);
+
+  const playPerformanceAudio = (audioBase64: string) => {
+    performancePlayer.current?.remove();
+    const player = createAudioPlayer({ uri: `data:audio/mpeg;base64,${audioBase64}` });
+    performancePlayer.current = player;
+    player.play();
+  };
+
+  const handlePerformVerse = async () => {
+    if (!currentSession) return;
+    setPerformanceLoading(true);
+    setPerformanceError(null);
+    try {
+      const generated = await performVerse(currentSession.lyrics, { intro, echoOut });
+      setPerformance(generated);
+      playPerformanceAudio(generated.audioBase64);
+    } catch (error) {
+      setPerformanceError(error instanceof Error ? error.message : "We could not make an exact take of your verse.");
+    } finally {
+      setPerformanceLoading(false);
+    }
+  };
+
+  const handleReplayPerformance = async () => {
+    if (!performance) return;
+    setPerformanceLoading(true);
+    setPerformanceError(null);
+    try {
+      const audioBase64 = await replayStoredPerformance(performance.id);
+      playPerformanceAudio(audioBase64);
+    } catch (error) {
+      setPerformanceError(error instanceof Error ? error.message : "We could not replay that take.");
+    } finally {
+      setPerformanceLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (lineAnims.current.length > 0) {
-      Animated.stagger(
+      RNAnimated.stagger(
         50,
         lineAnims.current.map((anim) =>
-          Animated.timing(anim, { toValue: 1, duration: 280, useNativeDriver: true })
+          RNAnimated.timing(anim, { toValue: 1, duration: 280, useNativeDriver: true })
         )
       ).start();
     }
@@ -176,7 +233,7 @@ export default function ResultScreen() {
           No session found
         </Text>
         <TouchableOpacity
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace(returnRoute as never)}
           style={[styles.homeBtn, { backgroundColor: colors.card }]}
         >
           <Text style={{ color: colors.text }}>Go Home</Text>
@@ -193,7 +250,7 @@ export default function ResultScreen() {
     flowRhythm: colors.violet,
     wordplay: colors.accent,
     originality: colors.red,
-    technique: "#4ADE80",
+    storytelling: "#4ADE80",
     humorCraft: colors.violet,
   };
 
@@ -204,7 +261,7 @@ export default function ResultScreen() {
 
   const handlePlayAgain = () => {
     resetCurrentSession();
-    router.replace("/");
+    router.replace(returnRoute as never);
   };
 
   const multiplierColor =
@@ -238,7 +295,7 @@ export default function ResultScreen() {
         </View>
 
         {/* Final score hero */}
-        <View style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <Animated.View style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }, revealStyle]}>
           <Text style={[styles.heroLabel, { color: colors.textMuted }]}>FINAL SCORE</Text>
           <Animated.Text
             style={[
@@ -261,7 +318,7 @@ export default function ResultScreen() {
               {multiplierReason}
             </Text>
           </View>
-        </View>
+        </Animated.View>
 
         {/* Tier 1: Dimension bars */}
         <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -356,6 +413,9 @@ export default function ResultScreen() {
                 >
                   {finalScore.toLocaleString()}
                 </Text>
+          <Text style={[styles.scoreLabel, { color: colors.accent }]}>
+            +{xpEarnedForSession(finalScore, isDrillSession(currentSession))} XP
+          </Text>
               </View>
             </View>
 
@@ -417,9 +477,9 @@ export default function ResultScreen() {
                 {lineBreakdown.map((item, i) => {
                   const dominantColor = getDominantTechniqueColor(item.techniques);
                   const borderColor = dominantColor ?? "#2A2A3F";
-                  const anim = lineAnims.current[i] ?? new Animated.Value(1);
+                  const anim = lineAnims.current[i] ?? new RNAnimated.Value(1);
                   return (
-                    <Animated.View
+                    <RNAnimated.View
                       key={item.line_number}
                       style={[
                         styles.lineRow,
@@ -477,7 +537,7 @@ export default function ResultScreen() {
                           })}
                         </View>
                       )}
-                    </Animated.View>
+                    </RNAnimated.View>
                   );
                 })}
               </View>
@@ -544,6 +604,52 @@ export default function ResultScreen() {
           </>
         )}
 
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.cyan + "44" }]}>
+          <View style={styles.coachHeader}>
+            <InlineIcon name="mic" size={14} color={colors.cyan} />
+            <Text style={[styles.cardTitle, { color: colors.cyan }]}>PERFORM MY VERSE</Text>
+          </View>
+          <Text style={[styles.performanceBody, { color: colors.textMuted }]}>
+            Hear this exact verse rapped back. We reject any take that adds, drops, or changes a word.
+          </Text>
+          <View style={styles.performanceToggleRow}>
+            <TouchableOpacity
+              onPress={() => setIntro((value) => !value)}
+              style={[styles.performanceToggle, { borderColor: intro ? colors.cyan : colors.border, backgroundColor: intro ? colors.cyan + "18" : "transparent" }]}
+            >
+              <Text style={[styles.performanceToggleText, { color: intro ? colors.cyan : colors.textMuted }]}>Intro {intro ? "ON" : "OFF"}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setEchoOut((value) => !value)}
+              style={[styles.performanceToggle, { borderColor: echoOut ? colors.violet : colors.border, backgroundColor: echoOut ? colors.violet + "18" : "transparent" }]}
+            >
+              <Text style={[styles.performanceToggleText, { color: echoOut ? colors.violet : colors.textMuted }]}>Echo out {echoOut ? "ON" : "OFF"}</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity
+            onPress={performance ? handleReplayPerformance : handlePerformVerse}
+            disabled={performanceLoading}
+            style={[styles.performanceButton, { backgroundColor: colors.cyan, opacity: performanceLoading ? 0.6 : 1 }]}
+          >
+            <InlineIcon name="mic" size={16} color={colors.background} />
+            <Text style={[styles.performanceButtonText, { color: colors.background }]}>
+              {performanceLoading ? "Mastering your verse…" : performance ? "Replay stored take" : "Perform my verse"}
+            </Text>
+          </TouchableOpacity>
+          {performance && (
+            <>
+              <Text style={[styles.performanceMeta, { color: colors.cyan }]}>
+                Exact take saved · {performance.remainingToday} left today · {Math.round(performance.durationMs / 1000)} sec
+              </Text>
+              <PerformanceShareButton
+                performanceId={performance.id}
+                canShareScore={performance.battleId !== null}
+              />
+            </>
+          )}
+          {performanceError && <Text style={[styles.performanceError, { color: colors.red }]}>{performanceError}</Text>}
+        </View>
+
         {/* Write Again — always visible */}
         <TouchableOpacity
           onPress={handlePlayAgain}
@@ -607,6 +713,52 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+  },
+  performanceBody: {
+    fontSize: 13,
+    lineHeight: 19,
+    marginBottom: 14,
+  },
+  performanceToggleRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  performanceToggle: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  performanceToggleText: {
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.4,
+  },
+  performanceButton: {
+    borderRadius: 12,
+    paddingVertical: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  performanceButtonText: {
+    fontSize: 14,
+    fontWeight: "800",
+    letterSpacing: 0.2,
+  },
+  performanceMeta: {
+    fontSize: 12,
+    marginTop: 10,
+    textAlign: "center",
+  },
+  performanceError: {
+    fontSize: 12,
+    lineHeight: 17,
+    marginTop: 10,
+    textAlign: "center",
   },
   tutorialCard: {
     width: "100%",
@@ -918,5 +1070,10 @@ const styles = StyleSheet.create({
   },
   weaknessOptionGap: {
     marginBottom: 10,
+  },
+  scoreLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 6,
   },
 });

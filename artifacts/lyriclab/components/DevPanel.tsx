@@ -120,7 +120,7 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
     flowRhythm: 70,
     wordplay: 70,
     originality: 70,
-    technique: 70,
+    storytelling: 70,
     humorCraft: 70,
   });
   const [hintTestWord, setHintTestWord] = useState("fire");
@@ -179,7 +179,7 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
         simScores.flowRhythm +
         simScores.wordplay +
         simScores.originality +
-        simScores.technique) /
+        simScores.storytelling) /
       5;
     const multiplier = avg >= 80 ? 1.25 : avg >= 60 ? 1.0 : 0.85;
     const finalScore = Math.round(avg * multiplier);
@@ -419,11 +419,12 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
                 ))}
               </View>
               {/* Dimension scores */}
-              <ScoreRow label="Rhyme Quality" value={simScores.rhymeQuality} onChange={updateSim("rhymeQuality")} />
-              <ScoreRow label="Flow & Rhythm" value={simScores.flowRhythm} onChange={updateSim("flowRhythm")} />
+               <ScoreRow label="Barz" value={simScores.rhymeQuality} onChange={updateSim("rhymeQuality")} />
+               <ScoreRow label="Flow" value={simScores.flowRhythm} onChange={updateSim("flowRhythm")} />
               <ScoreRow label="Wordplay" value={simScores.wordplay} onChange={updateSim("wordplay")} />
+               <ScoreRow label="Humor" value={simScores.humorCraft} onChange={updateSim("humorCraft")} />
+               <ScoreRow label="Storytelling" value={simScores.storytelling} onChange={updateSim("storytelling")} />
               <ScoreRow label="Originality" value={simScores.originality} onChange={updateSim("originality")} />
-              <ScoreRow label="Technique" value={simScores.technique} onChange={updateSim("technique")} />
               <View style={styles.simFinal}>
                 <Text style={styles.simFinalText}>
                   Avg{" "}
@@ -432,8 +433,10 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
                       simScores.flowRhythm +
                       simScores.wordplay +
                       simScores.originality +
-                      simScores.technique) /
-                      5
+                       simScores.humorCraft +
+                       simScores.storytelling +
+                       simScores.originality) /
+                       6
                   )}{" "}
                   → est. final{" "}
                   {(() => {
@@ -442,8 +445,10 @@ export function DevPanel({ visible, onClose, onForceHint }: Props) {
                         simScores.flowRhythm +
                         simScores.wordplay +
                         simScores.originality +
-                        simScores.technique) /
-                      5;
+                       simScores.humorCraft +
+                       simScores.storytelling +
+                       simScores.originality) /
+                       6;
                     const mult = avg >= 80 ? 1.25 : avg >= 60 ? 1.0 : 0.85;
                     return Math.round(avg * mult);
                   })()}

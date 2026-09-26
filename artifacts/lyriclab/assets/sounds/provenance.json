@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "note": "No source documentation in the workspace verifies the origin of these sound files. Unknown is intentional; do not treat filenames as provenance.",
+  "assets": [
+    { "file": "battle_punchy_blunt.wav", "provenance": "unknown" },
+    { "file": "bg-loop.wav", "provenance": "unknown" },
+    { "file": "intro-loop_1783057363927.mp3", "provenance": "unknown" },
+    { "file": "menu_calm_dreamer.m4a", "provenance": "unknown" },
+    { "file": "menu_calm_stars.m4a", "provenance": "unknown" },
+    { "file": "miss-scratch_1783057363837.mp3", "provenance": "unknown" },
+    { "file": "miss.wav", "provenance": "unknown" },
+    { "file": "quest-complete.wav", "provenance": "unknown" },
+    { "file": "quest_complete.wav", "provenance": "unknown" },
+    { "file": "scratch-tap_1783057363620.mp3", "provenance": "unknown" },
+    { "file": "scratch-tap.wav", "provenance": "unknown" },
+    { "file": "scratch.wav", "provenance": "unknown" },
+    { "file": "success-beatbox_1783057363764.mp3", "provenance": "unknown" },
+    { "file": "success_chime.wav", "provenance": "unknown" },
+    { "file": "success.wav", "provenance": "unknown" },
+    { "file": "tap2.wav", "provenance": "unknown" },
+    { "file": "tap3.wav", "provenance": "unknown" },
+    { "file": "tap.wav", "provenance": "unknown" },
+    { "file": "ui_tap.wav", "provenance": "unknown" }
+  ]
+}

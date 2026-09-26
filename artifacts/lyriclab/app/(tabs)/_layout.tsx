@@ -23,6 +23,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "basketball", selected: "basketball.fill" }} />
         <Label>Court</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="story">
+        <Icon sf={{ default: "book.closed", selected: "book.closed.fill" }} />
+        <Label>Story</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person", selected: "person.fill" }} />
         <Label>Profile</Label>
@@ -68,6 +72,13 @@ function ClassicTabLayout() {
         options={{
           title: "Court",
           tabBarIcon: ({ color }) => <Feather name="target" size={21} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="story"
+        options={{
+          title: "Story",
+          tabBarIcon: ({ color }) => <Feather name="book-open" size={21} color={color} />,
         }}
       />
       <Tabs.Screen

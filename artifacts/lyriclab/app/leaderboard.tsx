@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -18,8 +18,10 @@ import { useAuth } from "@/context/AuthContext";
 import { isCompetitionSession, useGame } from "@/context/GameContext";
 import { useColors } from "@/hooks/useColors";
 import type { GameSession } from "@/context/GameContext";
-import type { GlobalLeaderboardEntry } from "@/services/supabaseSync";
-import { fetchGlobalLeaderboard } from "@/services/supabaseSync";
+import {
+  getGetLeaderboardQueryKey,
+  useGetLeaderboard,
+} from "@workspace/api-client-react";
 
 type FilterMode = "all" | "free" | "prompted" | "blitz" | "battle";
 type ViewMode = "local" | "global";
@@ -32,24 +34,25 @@ const FILTER_LABELS: Record<FilterMode, string> = {
   battle: "Battle",
 };
 
-const CLASS_LABELS: Record<string, string> = {
-  assassin:    "🗡️ Assassin",
-  rider:       "🌊 Rider",
-  trickster:   "🎭 Trickster",
-  metamorpher: "🔮 Shapeshifter",  // dormant — preserved for future reactivation
-};
-
 export default function LeaderboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { sessions, getPersonalBest, getAverageScore, getImprovementTrend } = useGame();
-  const { user, isGuest } = useAuth();
+  const { user } = useAuth();
 
   const [filter, setFilter] = useState<FilterMode>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("local");
-  const [globalEntries, setGlobalEntries] = useState<GlobalLeaderboardEntry[]>([]);
-  const [globalLoading, setGlobalLoading] = useState(false);
-  const [globalError, setGlobalError] = useState<string | null>(null);
+  const leaderboardQuery = useGetLeaderboard({
+    query: {
+      queryKey: getGetLeaderboardQueryKey(),
+      enabled: viewMode === "global" && Boolean(user),
+    },
+  });
+  const globalEntries = leaderboardQuery.data?.entries ?? [];
+  const globalLoading = leaderboardQuery.isLoading;
+  const globalError = leaderboardQuery.error
+    ? "Could not load global rankings. Check your connection."
+    : null;
 
   const filtered =
     filter === "all"
@@ -64,16 +67,6 @@ export default function LeaderboardScreen() {
 
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
-
-  useEffect(() => {
-    if (viewMode !== "global") return;
-    setGlobalLoading(true);
-    setGlobalError(null);
-    fetchGlobalLeaderboard()
-      .then((entries) => setGlobalEntries(entries))
-      .catch(() => setGlobalError("Could not load global rankings. Check your connection."))
-      .finally(() => setGlobalLoading(false));
-  }, [viewMode]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -259,13 +252,13 @@ export default function LeaderboardScreen() {
                 {globalError}
               </Text>
               <TouchableOpacity
-                onPress={() => setViewMode("global")}
+                onPress={() => void leaderboardQuery.refetch()}
                 style={[styles.retryBtn, { borderColor: colors.border }]}
               >
                 <Text style={[styles.retryText, { color: colors.textMuted }]}>Retry</Text>
               </TouchableOpacity>
             </View>
-          ) : !isGuest && !user && globalEntries.length === 0 ? (
+          ) : !user ? (
             <View style={styles.emptyState}>
               <InlineIcon name="lock" size={32} color={colors.border} />
               <Text style={[styles.emptyTitle, { color: colors.textMuted }]}>
@@ -279,22 +272,16 @@ export default function LeaderboardScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <FlatList<GlobalLeaderboardEntry>
+            <FlatList
               data={globalEntries}
-              keyExtractor={(item) => item.user_id}
+              keyExtractor={(item) => String(item.rank)}
               renderItem={({ item }) => (
                 <View
                   style={[
                     styles.globalRow,
                     {
-                      backgroundColor:
-                        user && item.user_id === user.id
-                          ? colors.accent + "12"
-                          : colors.card,
-                      borderColor:
-                        user && item.user_id === user.id
-                          ? colors.accent + "44"
-                          : colors.border,
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
                     },
                   ]}
                 >
@@ -316,12 +303,11 @@ export default function LeaderboardScreen() {
                   </Text>
                   <View style={styles.globalMeta}>
                     <Text style={[styles.globalUsername, { color: colors.text }]}>
-                      {item.username}
-                      {user && item.user_id === user.id ? " (you)" : ""}
+                      {item.displayName}
                     </Text>
-                    {item.class_name ? (
+                    {item.rankTier ? (
                       <Text style={[styles.globalClass, { color: colors.textMuted }]}>
-                        {CLASS_LABELS[item.class_name] ?? item.class_name}
+                        {item.rankTier}
                       </Text>
                     ) : null}
                   </View>
@@ -335,10 +321,7 @@ export default function LeaderboardScreen() {
                         },
                       ]}
                     >
-                      {item.best_score.toLocaleString()}
-                    </Text>
-                    <Text style={[styles.globalSessions, { color: colors.textMuted }]}>
-                      {item.total_sessions} sessions
+                      {item.score.toLocaleString()}
                     </Text>
                   </View>
                 </View>
