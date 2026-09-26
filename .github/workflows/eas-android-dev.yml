@@ -2,6 +2,8 @@ name: EAS Android dev build
 
 on:
   workflow_dispatch:
+  push:
+    branches: [eas-build]
 
 jobs:
   build:
